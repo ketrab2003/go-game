@@ -2,24 +2,24 @@
 
 #include <cstdlib>
 
-void Pixel::print() {
+void Pixel::print() const {
   textcolor(color);
   textbackground(background_color);
   putch(sign);
 }
 
-const int Canvas::_getIndexInBuffer(const int x, const int y) {
-  if(x < 0 || x >= getWidth()) {
+int Canvas::_getIndexInBuffer(const int x, const int y) const {
+  if(x < 0 || x >= width) {
     return -1;
   }
-  if(y < 0 || y >= getHeight()) {
+  if(y < 0 || y >= height) {
     return -1;
   }
-  return y*getWidth() + x;
+  return y*width + x;
 }
 
-const int Canvas::_getBufferSize() {
-  return getWidth()*getHeight();
+int Canvas::_getBufferSize() const {
+  return width*height;
 }
 
 void Canvas::_setPixel(const int index, const Pixel pixel) {
@@ -29,22 +29,12 @@ void Canvas::_setPixel(const int index, const Pixel pixel) {
   _buffer[index] = pixel;
 }
 
-Canvas::Canvas(const int width, const int height) {
-  _width = width;
-  _height = height;
+Canvas::Canvas(const int width, const int height) : width(width), height(height) {
   _buffer = (Pixel*)malloc(sizeof(Pixel) * width * height);
   clear();
 }
 
-const int Canvas::getWidth() {
-  return _width;
-}
-
-const int Canvas::getHeight() {
-  return _height;
-}
-
-const Pixel Canvas::getPixel(const int x, const int y) {
+const Pixel Canvas::getPixel(const int x, const int y) const {
   const int index = _getIndexInBuffer(x, y);
   if(index == -1) {
     return Pixel{};
@@ -100,19 +90,19 @@ void Canvas::drawFilledRect(const int x, const int y, const int width, const int
   drawRect(x, y, width, height, filling, filling);
 }
 
-void Canvas::drawCanvas(Canvas& canvas, const int& x, const int& y) {
-  for(int ix=0; ix<canvas.getWidth(); ix++) {
-    for(int iy=0; iy<canvas.getHeight(); iy++) {
+void Canvas::drawCanvas(const Canvas& canvas, const int& x, const int& y) {
+  for(int ix=0; ix<canvas.width; ix++) {
+    for(int iy=0; iy<canvas.height; iy++) {
       setPixel(x+ix, y+iy, canvas.getPixel(ix, iy));
     }
   }
 }
 
-void Canvas::print(const int x, const int y) {
+void Canvas::print(const int x, const int y) const {
   gotoxy(x, y);
-  for(int iy=0; iy<_height; ++iy) {
-    for(int ix=0; ix<_width; ++ix) {
-      _buffer[_getIndexInBuffer(ix, iy)].print();
+  for(int iy=0; iy<height; ++iy) {
+    for(int ix=0; ix<width; ++ix) {
+      getPixel(ix, iy).print();
     }
     putch('\n');
   }
