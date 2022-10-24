@@ -1,5 +1,6 @@
 #include "conio2.h"
 #include "constants.h"
+#include "go_game.h"
 #include "gui_utils.h"
 
 int getkey() {
@@ -77,7 +78,7 @@ int main() {
 
 	do {
 		buffer.clear();
-		buffer.drawRect(0, 0, buffer.getWidth() - 1, buffer.getHeight() - 1, {BORDER_SIGN});		// Draw outer border
+		buffer.drawRect(0, 0, buffer.width - 1, buffer.height - 1, {BORDER_SIGN});		// Draw outer border
 
 		Canvas legend(LEGEND_WIDTH, LEGEND_HEIGHT);
 		legend.drawRect(0, -1, 24, 10, {BORDER_SIGN});
