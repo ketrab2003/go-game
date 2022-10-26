@@ -1,5 +1,6 @@
 #include "go_game.h"
 
+#include <cstdio>
 #include <cstdlib>
 
 template<typename T>
@@ -9,37 +10,60 @@ void swap(T& a, T& b) {
   b = temp;
 }
 
-#define min(a, b) (a < b ? a : b)
-
 GameState::GameState(const int board_size) : board_size(board_size) {
   board = (BoardSpace*)malloc(sizeof(BoardSpace) * board_size*board_size);
-  liberties_by_chain = (int*)malloc(sizeof(int) * board_size*board_size);
   reset();
 }
 
 void GameState::reset() {
   for(int i=0; i<board_size*board_size; ++i) {
     board[i] = {empty, -1};
-    liberties_by_chain[i] = 0;
   }
-  next_chain_id = 0;
   score_black = 0;
   score_white = 0;
   turn = black;
+  chosen_x = -1;
+  chosen_y = -1;
+  started = false;
 }
 
-void GameState::swapWith(GameState &game_state) {
-  swap(game_state.board, board);
-  swap(game_state.liberties_by_chain, liberties_by_chain);
-  swap(game_state.next_chain_id, next_chain_id);
-  swap(game_state.score_black, score_black);
-  swap(game_state.score_white, score_white);
-  swap(game_state.turn, turn);
+bool GameState::copyTo(GameState &game_state) const {
+  if(game_state.board_size != board_size) {
+    return false;
+  }
+
+  game_state.reset();
+
+  for(int i=0; i<board_size*board_size; ++i) {
+    const BoardSpace original_space = board[i];
+    game_state.board[i] = {original_space.state, -1};
+  }
+  game_state.score_black = score_black;
+  game_state.score_white = score_white;
+  game_state.turn = turn;
+  game_state.started = started;
+  game_state.chosen_x = chosen_x;
+  game_state.chosen_y = chosen_y;
+
+  return true;
+}
+
+bool GameState::compareBoards(const GameState &game_state) const {
+  if(game_state.board_size != board_size) {
+    return false;
+  }
+
+  for(int i=0; i<board_size*board_size; ++i) {
+    if(game_state.board[i].state != board[i].state) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 GameState::~GameState() {
   free(board);
-  free(liberties_by_chain);
 }
 
 
@@ -70,19 +94,22 @@ void GoGame::_setSpace(const int x, const int y, const BoardSpace value, GameSta
   game_state.board[index] = value;
 }
 
-void GoGame::_clearBoard(GameState& game_state) {
-  for(int i=0; i<board_size*board_size; ++i) {
-    game_state.board[i].state = empty;
-    game_state.board[i].chain_id = -1;
-  }
+bool GoGame::_madePlacement() const {
+  return (_game_state.chosen_x != -1 && _game_state.chosen_y != -1);
 }
 
 void GoGame::_generateNextGameState() {
-  _next_game_state.reset();
-  _copyStonesToNextState();
-  _propagateAllChains();
-  _countLiberties();
-  _captureAllUnliberatedChains();
+  _game_state.copyTo(_next_game_state);
+
+  for(int i=0; i<2; ++i) {    // apply generation two times to prioritize placed stone, therefore allowing ko situation
+    _setSpace(_next_game_state.chosen_x, _next_game_state.chosen_y, {getPlayersStone(), -1}, _next_game_state);
+    _identifyAllChains();
+    _countLiberties();
+    _captureAllUnliberatedChains();
+  }
+
+  _next_game_state.chosen_x = -1;
+  _next_game_state.chosen_y = -1;
 
   switch (_game_state.turn) {
     case black:
@@ -94,28 +121,22 @@ void GoGame::_generateNextGameState() {
   }
 }
 
-void GoGame::_copyStonesToNextState() {
-  for(int y=0; y<board_size; ++y) {
-    for(int x=0; x<board_size; ++x) {
-      const BoardSpace original_space = _getSpace(x, y, _game_state);
-      _setSpace(x, y, {original_space.state, -1}, _next_game_state);
-    }
-  }
-}
+void GoGame::_identifyAllChains() {
+  _next_chain_id = 0;
 
-void GoGame::_propagateAllChains() {
   for(int y=0; y<board_size; ++y) {
     for(int x=0; x<board_size; ++x) {
       const BoardSpace space = _getSpace(x, y, _next_game_state);
       if(space.state == empty || space.state == edge || space.chain_id != -1) {
         continue;
       }
-      _propagateChain(x, y, _next_game_state.next_chain_id++);
+      _liberties_by_chain[_next_chain_id] = 0;
+      _identifyChain(x, y, _next_chain_id++);
     }
   }
 }
 
-void GoGame::_propagateChain(const int x, const int y, const int& chain_id) {
+void GoGame::_identifyChain(const int x, const int y, const int& chain_id) {
   const BoardSpace space = _getSpace(x, y, _next_game_state);
   _setSpace(x, y, {space.state, chain_id}, _next_game_state);
 
@@ -127,7 +148,7 @@ void GoGame::_propagateChain(const int x, const int y, const int& chain_id) {
     if(i_space.state != space.state || i_space.chain_id == chain_id) {
       continue;
     }
-    _propagateChain(ix, iy, chain_id);
+    _identifyChain(ix, iy, chain_id);
   }
 }
 
@@ -165,7 +186,7 @@ void GoGame::_sendLiberties(const int x, const int y) {
       continue;
     }
 
-    _next_game_state.liberties_by_chain[i_space.chain_id]++;
+    _liberties_by_chain[i_space.chain_id]++;
     visited_chains[i] = i_space.chain_id;
   }
 }
@@ -178,7 +199,7 @@ void GoGame::_captureAllUnliberatedChains() {
         continue;
       }
 
-      const int liberty_count = _next_game_state.liberties_by_chain[space.chain_id];
+      const int liberty_count = _liberties_by_chain[space.chain_id];
       if(liberty_count > 0) {
         continue;
       }
@@ -218,14 +239,18 @@ int GoGame::_captureUnliberatedChain(const int x, const int y) {
 }
 
 void GoGame::_applyNextGameState() {
-  _game_state.swapWith(_next_game_state);
+  _original_game_state.copyTo(_previous_game_state);
+  _next_game_state.copyTo(_game_state);
+  _game_state.copyTo(_original_game_state);
 }
 
 GoGame::GoGame(const int board_size) :
-  board_size(board_size),
+  _previous_game_state(board_size),
+  _original_game_state(board_size),
   _game_state(board_size),
-  _next_game_state(board_size) {
-  _clearBoard(_game_state);
+  _next_game_state(board_size),
+  board_size(board_size) {
+  _liberties_by_chain = (int*)malloc(sizeof(int) * board_size*board_size);
 }
 
 BoardSpace GoGame::getSpace(const int x, const int y) const {
@@ -261,26 +286,52 @@ BoardSpaceState GoGame::getEnemysStone() const {
 }
 
 MoveResult GoGame::placeStone(const int x, const int y) {
+  if(_madePlacement()) {
+    return already_placed;
+  }
   if(getSpace(x, y).state != empty) {
     return occupied;
   }
+
   _setSpace(x, y, {getPlayersStone(), -1}, _game_state);
-  
+  _game_state.chosen_x = x;
+  _game_state.chosen_y = y;
   _generateNextGameState();
+
   if(_getSpace(x, y, _next_game_state).state == empty) {
     _setSpace(x, y, {empty, -1}, _game_state);
     return suicidal;
   }
 
-  _applyNextGameState();
+  if(_previous_game_state.compareBoards(_next_game_state)) {
+    _setSpace(x, y, {empty, -1}, _game_state);
+    return ko;
+  }
+
+  _next_game_state.copyTo(_game_state);
+  _game_state.chosen_x = x;
+  _game_state.chosen_y = y;
   return done;
+}
+
+bool GoGame::confirmPlacement() {
+  if(_madePlacement()) {
+    _applyNextGameState();
+    return true;
+  }
+  return false;
+}
+
+void GoGame::cancelPlacement() {
+  _original_game_state.copyTo(_game_state);
 }
 
 void GoGame::exportBoard(char *str) const {
   for(int y=0; y<board_size; ++y) {
     for(int x=0; x<board_size; ++x) {
       char& c = str[y*board_size + x];
-      switch (getSpace(x, y).state) {
+      const BoardSpace space = getSpace(x, y);
+      switch (space.state) {
         case empty:
           c = '.';
         break;
@@ -296,5 +347,9 @@ void GoGame::exportBoard(char *str) const {
       }
     }
   }
-  str[board_size*board_size+1] = '\0';
+  str[board_size*board_size] = '\0';
+}
+
+GoGame::~GoGame() {
+  free(_liberties_by_chain);
 }
