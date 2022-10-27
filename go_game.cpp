@@ -21,10 +21,11 @@ void GameState::reset() {
   }
   score_black = 0;
   score_white = 0;
+  score_bonus_white = 6.5;
   turn = black;
   chosen_x = -1;
   chosen_y = -1;
-  started = false;
+  isFirstTurn = true;
 }
 
 bool GameState::copyTo(GameState &game_state) const {
@@ -40,8 +41,9 @@ bool GameState::copyTo(GameState &game_state) const {
   }
   game_state.score_black = score_black;
   game_state.score_white = score_white;
+  game_state.score_bonus_white = score_bonus_white;
   game_state.turn = turn;
-  game_state.started = started;
+  game_state.isFirstTurn = isFirstTurn;
   game_state.chosen_x = chosen_x;
   game_state.chosen_y = chosen_y;
 
@@ -96,6 +98,10 @@ void GoGame::_setSpace(const int x, const int y, const BoardSpace value, GameSta
 
 bool GoGame::_madePlacement() const {
   return (_game_state.chosen_x != -1 && _game_state.chosen_y != -1);
+}
+
+bool GoGame::_isFirstTurn() const {
+  return _original_game_state.isFirstTurn;
 }
 
 void GoGame::_generateNextGameState() {
@@ -241,7 +247,12 @@ int GoGame::_captureUnliberatedChain(const int x, const int y) {
 void GoGame::_applyNextGameState() {
   _original_game_state.copyTo(_previous_game_state);
   _next_game_state.copyTo(_game_state);
+  _game_state.isFirstTurn = false;
   _game_state.copyTo(_original_game_state);
+}
+
+void GoGame::_enableHandicap() {
+  _next_game_state.score_bonus_white = 0.5;
 }
 
 GoGame::GoGame(const int board_size) :
@@ -286,9 +297,15 @@ BoardSpaceState GoGame::getEnemysStone() const {
 }
 
 MoveResult GoGame::placeStone(const int x, const int y) {
-  if(_madePlacement()) {
+  if(_madePlacement() && !_isFirstTurn()) {
     return already_placed;
   }
+
+  bool handicap_mode = false;
+  if(_madePlacement() && _isFirstTurn()) {
+    handicap_mode = true;
+  }
+
   if(getSpace(x, y).state != empty) {
     return occupied;
   }
@@ -311,6 +328,15 @@ MoveResult GoGame::placeStone(const int x, const int y) {
   _next_game_state.copyTo(_game_state);
   _game_state.chosen_x = x;
   _game_state.chosen_y = y;
+  if(_isFirstTurn()) {
+    _game_state.turn = black;
+  }
+
+  if(handicap_mode) {
+    _enableHandicap();
+    return handicap;
+  }
+
   return done;
 }
 

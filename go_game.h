@@ -6,6 +6,7 @@ enum MoveResult {
   suicidal,
   already_placed,
   ko,
+  handicap,
 };
 
 enum Player {
@@ -29,10 +30,11 @@ struct GameState {
   BoardSpace *board;
   const int board_size;
   Player turn;    // whose turn it is
+  bool isFirstTurn;  // becomes false after first placement confirm, used to recognize whether to enable handicap
   int score_black;
   int score_white;
+  float score_bonus_white;
 
-  bool started;  // becomes true after first placement confirm, used to recognize whether to enable handicap
   int chosen_x, chosen_y;
 
   GameState(const int board_size);
@@ -57,6 +59,7 @@ class GoGame {
 
   void _setSpace(const int x, const int y, const BoardSpace space, GameState& game_state);
   bool _madePlacement() const;
+  bool _isFirstTurn() const;
 
   void _generateNextGameState();
   void _identifyAllChains();
@@ -66,6 +69,8 @@ class GoGame {
   void _captureAllUnliberatedChains();    // also add captured stones to player score
   int _captureUnliberatedChain(const int x, const int y);   // return unliberated chain count, for player's score
   void _applyNextGameState();
+
+  void _enableHandicap();
 
 public:
   const int board_size;

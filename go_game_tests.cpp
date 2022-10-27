@@ -237,7 +237,43 @@ void koRule() {
   assert(move_result == ko && "trying to repeat previous situation results in 'ko'");
 }
 
-void handicap() {
+void handicapMode() {
+  GoGame game(4);
+  char result[4*4 + 1];
+
+  game.placeStone(1, 1);
+  const MoveResult move_result = game.placeStone(2, 2);
+
+  assert(move_result == handicap && "game should allow black on the beggining place multiple stones, and return 'handicap' result");
+
+  game.placeStone(2, 1);
+  game.confirmPlacement();
+
+  game.exportBoard(result);
+  const char expected[] =
+          "...."
+          ".bb."
+          "..b."
+          "....";
+  assert(compare(result, expected) && "game should allow black on the beggining place multiple stones");
+
+  game.placeStone(1, 0);
+  const MoveResult move_result2 = game.placeStone(2, 0);
+
+  assert(move_result2 == already_placed && "white should never be able to place multiple stones");
+
+  game.confirmPlacement();
+  game.placeStone(1, 3);
+  const MoveResult move_result3 = game.placeStone(2, 3);
+
+  assert(move_result3 == already_placed && "black should be able to place multiple stones only in first turn");
+}
+
+void scoringCaptures() {
+  // TODO: implement
+}
+
+void scoringTerritory() {
   // TODO: implement
 }
 
@@ -250,5 +286,6 @@ int main() {
   nearEdgeCapturing();
   longChainCapturing();
   koRule();
+  handicapMode();
   fprintf(stdout, "Passed all tests!\n");
 }
