@@ -28,6 +28,12 @@ void GameState::reset() {
   isFirstTurn = true;
 }
 
+void GameState::resetChainIds() {
+  for(int i=0; i<board_size*board_size; ++i) {
+    board[i].chain_id = -1;
+  }
+}
+
 bool GameState::copyTo(GameState &game_state) const {
   if(game_state.board_size != board_size) {
     return false;
@@ -36,8 +42,7 @@ bool GameState::copyTo(GameState &game_state) const {
   game_state.reset();
 
   for(int i=0; i<board_size*board_size; ++i) {
-    const BoardSpace original_space = board[i];
-    game_state.board[i] = {original_space.state, -1};
+    game_state.board[i] = board[i];
   }
   game_state.score_black = score_black;
   game_state.score_white = score_white;
@@ -107,12 +112,21 @@ bool GoGame::_isFirstTurn() const {
 void GoGame::_generateNextGameState() {
   _game_state.copyTo(_next_game_state);
 
-  for(int i=0; i<2; ++i) {    // apply generation two times to prioritize placed stone, therefore allowing ko situation
-    _setSpace(_next_game_state.chosen_x, _next_game_state.chosen_y, {getPlayersStone(), -1}, _next_game_state);
-    _identifyAllChains();
-    _countLiberties();
-    _captureAllUnliberatedChains();
-  }
+  _next_game_state.resetChainIds();
+  _identifyAllChains();
+  _countLiberties();
+  // give advantage to just-placed stone by giving them one free liberty
+  const int blessed_chain_id = _getSpace(_game_state.chosen_x,
+                                         _game_state.chosen_y, 
+                                         _next_game_state).chain_id;
+  _liberties_by_chain[blessed_chain_id]++;
+  _captureAllUnliberatedChains();
+  
+  // repeat liberty count, now without blessing, draws were resolved, because enemy wasn't 'blessed'
+  _next_game_state.resetChainIds();
+  _identifyAllChains();
+  _countLiberties();
+  _captureAllUnliberatedChains();
 
   _next_game_state.chosen_x = -1;
   _next_game_state.chosen_y = -1;

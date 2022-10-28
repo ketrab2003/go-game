@@ -10,8 +10,8 @@ enum MoveResult {
 };
 
 enum Player {
-  black = 0,
-  white = 1,
+  black,
+  white,
 };
 
 enum BoardSpaceState {
@@ -39,6 +39,7 @@ struct GameState {
 
   GameState(const int board_size);
   void reset();
+  void resetChainIds();
   bool copyTo(GameState& game_state) const;   // copies everything, except for liberties and chain ids,
                                               // they need to be re-identified after every change anyway
   bool compareBoards(const GameState& game_state) const;

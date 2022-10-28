@@ -12,6 +12,7 @@ bool compare(const char *str1, const char *str2) {
 }
 
 void simpleStonePlacing() {
+  printf("Testing Simple stone placing...");
   GoGame game(7);
   char result[7*7 + 1];
 
@@ -33,11 +34,14 @@ void simpleStonePlacing() {
           "...w..."
           "......."
           ".......";
-  assert(move_result == done && "simple stone placing returns 'done' result");
-  assert(compare(result, expected) && "simple stone placing");
+  assert(move_result == done && "simple stone placing should return 'done' result");
+  assert(compare(result, expected) && "simple stone placing should work");
+
+  puts("OK");
 }
 
 void placeOnOccupiedField() {
+  printf("Testing Placing on occupied field...");
   GoGame game(5);
   char result[5*5 + 1];
 
@@ -55,11 +59,14 @@ void placeOnOccupiedField() {
           "..b.."
           "....."
           ".....";
-  assert(move_result == occupied && "place on occupied field returns 'occupied' result");
-  assert(compare(result, expected) && "place on occupied field lets to put the same stone again");
+  assert(move_result == occupied && "place on occupied field should return 'occupied' result");
+  assert(compare(result, expected) && "place on occupied field should let to put the same stone again");
+
+  puts("OK");
 }
 
 void simpleStonePlacing2() {
+  printf("Testing Simple stone placing further...");
   GoGame game(4);
   char result[4*4 + 1];
 
@@ -87,9 +94,12 @@ void simpleStonePlacing2() {
           ".w.."
           "....";
   assert(compare(result, expected2) && "after failed second placing, previous chosen place should be preserved");
+
+  puts("OK");
 }
 
 void placementCancellation() {
+  printf("Testing Placement cancellation...");
   GoGame game(4);
   char result[4*4 + 1];
 
@@ -126,9 +136,12 @@ void placementCancellation() {
           "...."
           "....";
   assert(compare(result, expected3) && "after cancelling, player should be able to choose other place");
+
+  puts("OK");
 }
 
 void simpleCapturing() {
+  printf("Testing Simple capturing...");
   GoGame game(7);
   char result[7*7 + 1];
 
@@ -156,10 +169,13 @@ void simpleCapturing() {
           "......."
           "......."
           ".......";
-  assert(compare(result, expected) && "simple capturing");
+  assert(compare(result, expected) && "simple capturing should be possible");
+
+  puts("OK");
 }
 
 void nearEdgeCapturing() {
+  printf("Testing Near-edge capturing...");
   GoGame game(5);
   char result[5*5 + 1];
 
@@ -179,10 +195,13 @@ void nearEdgeCapturing() {
           "..b.."
           "....."
           ".....";
-    assert(compare(result, expected) && "near-edge capturing");
+  assert(compare(result, expected) && "near-edge capturing should be possible");
+
+  puts("OK");
 }
 
 void longChainCapturing() {
+  printf("Testing Long chain capturing...");
   GoGame game(5);
   char result[5*5 + 1];
 
@@ -208,9 +227,32 @@ void longChainCapturing() {
           ".w.wb"
           "b.w.b";
   assert(compare(result, expected) && "capturing of long chains should be supported");
+
+  puts("OK");
+}
+
+void advancedSuicidal() {
+  printf("Testing Advanced suicidal...");
+  GoGame game(4);
+  char result[4*4 + 1];
+
+  const int moves[][2] = {{0,1},{0,2},
+                          {1,0},{1,2},
+                          {1,1},{2,1},
+                          {3,3},{2,0}};
+  for(auto move: moves) {
+    game.placeStone(move[0], move[1]);
+    game.confirmPlacement();
+  }
+
+  const MoveResult move_result = game.placeStone(0, 0);
+  assert(move_result == suicidal && "stone should be suicidal if move destroys its chain");
+
+  puts("OK");
 }
 
 void koRule() {
+  printf("Testing Ko rule...");
   GoGame game(4);
   char result[4*4 + 1];
 
@@ -233,11 +275,15 @@ void koRule() {
           "b...";
   assert(compare(result, expected) && "newly placed stone should get priority in capturing");
 
-  MoveResult move_result = game.placeStone(2, 1);
+  const MoveResult move_result = game.placeStone(2, 1);
   assert(move_result == ko && "trying to repeat previous situation results in 'ko'");
+
+  puts("OK");
 }
 
 void handicapMode() {
+  printf("Testing Handicap...");
+
   GoGame game(4);
   char result[4*4 + 1];
 
@@ -267,6 +313,8 @@ void handicapMode() {
   const MoveResult move_result3 = game.placeStone(2, 3);
 
   assert(move_result3 == already_placed && "black should be able to place multiple stones only in first turn");
+
+  puts("OK");
 }
 
 void scoringCaptures() {
@@ -285,6 +333,7 @@ int main() {
   simpleCapturing();
   nearEdgeCapturing();
   longChainCapturing();
+  advancedSuicidal();
   koRule();
   handicapMode();
   fprintf(stdout, "Passed all tests!\n");
