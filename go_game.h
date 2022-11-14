@@ -1,5 +1,8 @@
 #pragma once
 
+#include "array2D.h"
+#include <cstdio>
+
 enum MoveResult {
   done,
   occupied,
@@ -10,25 +13,28 @@ enum MoveResult {
 };
 
 enum Player {
-  black,
-  white,
+  black = 0,
+  white = 1,
 };
 
 enum BoardSpaceState {
-  empty,
-  blackStone,
-  whiteStone,
-  edge,
+  empty = 0,
+  blackStone = 1,
+  whiteStone = 2,
+  edge = 3,
 };
 
 struct BoardSpace {
-  BoardSpaceState state;
-  int chain_id;
+  BoardSpaceState state = empty;
+  int visited_id = -1;
 };
 
-struct GameState {
-  BoardSpace *board;
-  const int board_size;
+class GameState {
+  Array2D<BoardSpace> _board;
+  int _board_size;
+
+  bool _validCoords(const int x, const int y) const;
+public:
   Player turn;    // whose turn it is
   bool isFirstTurn;  // becomes false after first placement confirm, used to recognize whether to enable handicap
   int score_black;
@@ -38,12 +44,19 @@ struct GameState {
   int chosen_x, chosen_y;
 
   GameState(const int board_size);
-  void reset();
-  void resetChainIds();
-  bool copyTo(GameState& game_state) const;   // copies everything, except for liberties and chain ids,
-                                              // they need to be re-identified after every change anyway
+  void reset_visited();
+
+  BoardSpace getSpace(const int x, const int y) const;
+  void setSpace(const int x, const int y, const BoardSpace space);
+  void setSpace(const int x, const int y, const BoardSpaceState space_state);
+  void visitSpace(const int x, const int y, const int id);
+
+  int getBoardSize() const;
+
   bool compareBoards(const GameState& game_state) const;
-  ~GameState();
+
+  void save(FILE *file) const;
+  void load(FILE *file);    // basically has the same level as constructor, so some mallocs or similar may occur here
 };
 
 class GoGame {
@@ -52,33 +65,22 @@ class GoGame {
   GameState _game_state;
   GameState _next_game_state;
 
-  int *_liberties_by_chain;
-  int _next_chain_id;
-  
-  int _getIndexInBoard(const int x, const int y) const;
-  BoardSpace _getSpace(const int x, const int y, const GameState& game_state) const;
-
-  void _setSpace(const int x, const int y, const BoardSpace space, GameState& game_state);
   bool _madePlacement() const;
   bool _isFirstTurn() const;
 
   void _generateNextGameState();
-  void _identifyAllChains();
-  void _identifyChain(const int x, const int y, const int& chain_id);
-  void _countLiberties();
-  void _sendLiberties(const int x, const int y);
-  void _captureAllUnliberatedChains();    // also add captured stones to player score
-  int _captureUnliberatedChain(const int x, const int y);   // return unliberated chain count, for player's score
+  int _countChainLiberties(const int x, const int y, const int &visit_id);
+  void _removeChain(const int x, const int y);
   void _applyNextGameState();
 
   void _enableHandicap();
 
 public:
-  const int board_size;
 
   GoGame(const int board_size);
 
   BoardSpace getSpace(const int x, const int y) const;    // if coordinates are outside of board, it returns edge space
+  int getBoardSize() const;
   Player getTurnState() const;    // return black or white depending on whose turn it is
   BoardSpaceState getPlayersStone() const;   // return black or white stone depending on whose turn it is
   BoardSpaceState getEnemysStone() const;    // return opposite of getPlayerStone()
@@ -89,7 +91,8 @@ public:
   bool confirmPlacement();
   void cancelPlacement();
 
-  void exportBoard(char *str) const;
+  void save(FILE *file) const;
+  void load(FILE *file);
 
-  ~GoGame();
+  void exportBoard(char *str) const;
 };

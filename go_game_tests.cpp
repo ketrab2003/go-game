@@ -317,6 +317,80 @@ void handicapMode() {
   puts("OK");
 }
 
+void creatingNewGame() {
+  printf("Testing Creating new game...");
+
+  GoGame game = GoGame(3);
+  game.placeStone(1, 2);
+  game.confirmPlacement();
+  game.placeStone(0, 2);
+  game.confirmPlacement();
+
+  game = GoGame(4);
+  char result[4*4 + 1];
+  game.exportBoard(result);
+  const char expected[] =
+          "...."
+          "...."
+          "...."
+          "....";
+  assert(compare(result, expected) && "new game should be created");
+
+  puts("OK");
+}
+
+void savingAndLoading() {
+  printf("Testing Saving and loading:\n");
+  const char *save_filename = "test_save.sav";
+
+  GoGame game(3);
+
+  game.placeStone(0, 0);
+  game.confirmPlacement();
+  game.placeStone(1, 1);
+  game.confirmPlacement();
+
+  printf("\tSaving game...");
+  FILE* save_file = fopen(save_filename, "wb");
+  game.save(save_file);
+  fclose(save_file);
+  puts("OK");
+
+  printf("\tCreating new game with different size...");
+  GoGame game2(5);
+  char result1[5*5 + 1];
+
+  game2.placeStone(3, 2);
+  game2.confirmPlacement();
+  game2.placeStone(1, 3);
+  game2.confirmPlacement();
+  game2.exportBoard(result1);
+  const char expected[] =
+          "....."
+          "....."
+          "...b."
+          ".w..."
+          ".....";
+  assert(compare(result1, expected) && "new game should be created");
+  puts("OK");
+
+  printf("\tLoading old game...");
+  FILE *load_file = fopen(save_filename, "rb");
+  game2.load(load_file);
+  fclose(load_file);
+  char result2[3*3 + 1];
+
+  game2.exportBoard(result2);
+  const char expected2[] =
+          "b.."
+          ".w."
+          "...";
+  assert(compare(result2, expected2) && "saved game should be loaded");
+
+  remove(save_filename);
+  puts("OK");
+}
+
 void scoringCaptures() {
   // TODO: implement
 }
@@ -326,6 +400,7 @@ void scoringTerritory() {
 }
 
 int main() {
+  puts("Start testing...");
   simpleStonePlacing();
   placeOnOccupiedField();
   simpleStonePlacing2();
@@ -336,5 +411,7 @@ int main() {
   advancedSuicidal();
   koRule();
   handicapMode();
+  creatingNewGame();
+  savingAndLoading();
   fprintf(stdout, "Passed all tests!\n");
 }
