@@ -1,66 +1,91 @@
 #include "gui_utils.h"
+#include "conio2.h"
 
 #include <cstdlib>
 
 void Pixel::print() const {
-  textcolor(color);
+  textcolor(foreground_color);
   textbackground(background_color);
   putch(sign);
 }
 
-int Canvas::_getIndexInBuffer(const int x, const int y) const {
-  if(x < 0 || x >= width) {
-    return -1;
+
+
+bool Canvas::_validCoords(const int x, const int y) const {
+  if(x < 0 || x >= getWidth()) {
+    return false;
   }
-  if(y < 0 || y >= height) {
-    return -1;
+  if(y < 0 || y >= getHeight()) {
+    return false;
   }
-  return y*width + x;
+  return true;
 }
 
-int Canvas::_getBufferSize() const {
-  return width*height;
-}
-
-void Canvas::_setPixel(const int index, const Pixel pixel) {
-  if(index < 0 || index >= _getBufferSize()) {
-    return;
-  }
-  _buffer[index] = pixel;
-}
-
-Canvas::Canvas(const int width, const int height) : width(width), height(height) {
-  _buffer = (Pixel*)malloc(sizeof(Pixel) * width * height);
+Canvas::Canvas(const int width, const int height)
+: _buffer(width, height) {
   clear();
 }
 
-const Pixel Canvas::getPixel(const int x, const int y) const {
-  const int index = _getIndexInBuffer(x, y);
-  if(index == -1) {
-    return Pixel{};
+int Canvas::getWidth() const {
+  return _buffer.getWidth();
+}
+
+int Canvas::getHeight() const {
+  return _buffer.getHeight();
+}
+
+Pixel Canvas::getPixel(const int x, const int y) const {
+  if(!_validCoords(x, y)) {
+    return Pixel();
   }
-  return _buffer[index];
+  return _buffer[x][y];
 }
 
 void Canvas::setPixel(const int x, const int y, const Pixel pixel) {
-  _setPixel(_getIndexInBuffer(x, y), pixel);
+  if(!_validCoords(x, y)) {
+    return;
+  }
+  _buffer[x][y] = pixel;
 }
 
-void Canvas::setPixel(const int x, const int y, const char sign, const int color, const int background_color) {
-  setPixel(x, y, Pixel{sign, color, background_color});
+void Canvas::setPixel(const int x, const int y, const unsigned char sign, const int foreground_color, const int background_color) {
+  setPixel(x, y, Pixel{sign, foreground_color, background_color});
+}
+
+void Canvas::setPixelBackground(const int x, const int y, const int background_color) {
+  if(!_validCoords(x, y)) {
+    return;
+  }
+  _buffer[x][y].background_color = background_color;
+}
+
+void Canvas::setPixelForeground(const int x, const int y, const int foreground_color) {
+  if(!_validCoords(x, y)) {
+    return;
+  }
+  _buffer[x][y].foreground_color = foreground_color;
+}
+
+void Canvas::setPixelSign(const int x, const int y, const unsigned char sign) {
+  if(!_validCoords(x, y)) {
+    return;
+  }
+  _buffer[x][y].sign = sign;
 }
 
 void Canvas::clear() {
-  fill(BLACK);
+  fill(Pixel());
 }
 
-void Canvas::fill(const int background_color) {
-  for(int i=0; i<_getBufferSize(); ++i) {
-      _setPixel(i, Pixel{' ', WHITE, background_color});
+void Canvas::fill(const Pixel pixel) {
+  for(int x=0; x<getWidth(); ++x) {
+    for(int y=0; y<getHeight(); ++y) {
+      setPixel(x, y, pixel);
+    }
   }
 }
 
-void Canvas::drawText(const char *str, const int x, const int y, const int color, const int background_color) {
+void Canvas::drawText(const char *str, const int x, const int y, const int foreground_color, const int background_color) {
   int iy = 0;
   int ix = 0;
   for(int i=0; str[i] != '\0'; ++i) {
@@ -69,7 +94,7 @@ void Canvas::drawText(const char *str, const int x, const int y, const int color
       ix = 0;
       continue;
     }
-    setPixel(x+ix, y+iy, Pixel{str[i], color, background_color});
+    setPixel(x+ix, y+iy, str[i], foreground_color, background_color);
     ix++;
   }
 }
@@ -91,8 +116,8 @@ void Canvas::drawFilledRect(const int x, const int y, const int width, const int
 }
 
 void Canvas::drawCanvas(const Canvas& canvas, const int& x, const int& y) {
-  for(int ix=0; ix<canvas.width; ix++) {
-    for(int iy=0; iy<canvas.height; iy++) {
+  for(int ix=0; ix<canvas.getWidth(); ix++) {
+    for(int iy=0; iy<canvas.getHeight(); iy++) {
       setPixel(x+ix, y+iy, canvas.getPixel(ix, iy));
     }
   }
@@ -100,14 +125,10 @@ void Canvas::drawCanvas(const Canvas& canvas, const int& x, const int& y) {
 
 void Canvas::print(const int x, const int y) const {
   gotoxy(x, y);
-  for(int iy=0; iy<height; ++iy) {
-    for(int ix=0; ix<width; ++ix) {
+  for(int iy=0; iy<getHeight(); ++iy) {
+    for(int ix=0; ix<getWidth(); ++ix) {
       getPixel(ix, iy).print();
     }
     putch('\n');
   }
-}
-
-Canvas::~Canvas() {
-  free(_buffer);
 }

@@ -56,7 +56,7 @@ public:
   bool compareBoards(const GameState& game_state) const;
 
   void save(FILE *file) const;
-  void load(FILE *file);    // basically has the same level as constructor, so some mallocs or similar may occur here
+  void load(FILE *file);
 };
 
 class GoGame {

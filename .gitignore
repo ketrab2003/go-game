@@ -1,6 +1,5 @@
 *.o
 *.so
 *.exe
-test.out
-tests.out
+*.out
 test_save.sav

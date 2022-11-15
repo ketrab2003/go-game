@@ -275,6 +275,14 @@ BoardSpaceState GoGame::getEnemysStone() const {
   return empty;
 }
 
+int GoGame::getChosenX() const {
+  return _game_state.chosen_x;
+}
+
+int GoGame::getChosenY() const {
+  return _game_state.chosen_y;
+}
+
 MoveResult GoGame::placeStone(const int x, const int y) {
   if(_madePlacement() && !_isFirstTurn()) {
     return already_placed;
@@ -295,12 +303,12 @@ MoveResult GoGame::placeStone(const int x, const int y) {
   _generateNextGameState();
 
   if(_next_game_state.getSpace(x, y).state == empty) {
-    _game_state.setSpace(x, y, empty);
+    _game_state = _original_game_state;
     return suicidal;
   }
 
   if(_previous_game_state.compareBoards(_next_game_state)) {
-    _game_state.setSpace(x, y, empty);
+    _game_state = _original_game_state;
     return ko;
   }
 
