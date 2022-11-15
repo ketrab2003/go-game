@@ -1,8 +1,6 @@
 #include "go_game.h"
 
 #include "array2D.h"
-#include <cstdio>
-#include <cstdlib>
 
 bool GameState::_validCoords(const int x, const int y) const {
   if(x < 0 || x >= getBoardSize()) {

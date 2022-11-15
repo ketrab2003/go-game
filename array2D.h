@@ -1,18 +1,13 @@
 #pragma once
 
-#include <cstdio>
-
-#include <cstddef>
-#include <cstring>
-
 template<class T>
 class Array2D {
 private:
   T *_vals;
-  unsigned int _width, _height;
+  unsigned _width, _height;
   
 public:
-  Array2D(const unsigned int width, const unsigned int height);
+  Array2D(const unsigned width, const unsigned height);
   ~Array2D();
   Array2D(const Array2D<T> &other);
   Array2D(Array2D<T> &&other) noexcept;
@@ -21,16 +16,18 @@ public:
 
   bool operator==(const Array2D<T> &other);
 
-  unsigned int getWidth() const;
-  unsigned int getHeight() const;
-  unsigned int getArea() const;   // number of all allocated values
+  unsigned getWidth() const;
+  unsigned getHeight() const;
+  unsigned getArea() const;   // number of all allocated values
 
-  T* operator[](const unsigned int x) const;
-  T* operator[](const unsigned int x);
+  T* operator[](const unsigned x) const;
+  T* operator[](const unsigned x);
 };
 
+#include <cstring>
+
 template<class T>
-Array2D<T>::Array2D(const unsigned int width, const unsigned int height) {
+Array2D<T>::Array2D(const unsigned width, const unsigned height) {
   _width = width;
   _height = height;
   _vals = new T[getArea()]();
@@ -44,13 +41,7 @@ Array2D<T>::~Array2D() {
 template<class T>
 Array2D<T>::Array2D(const Array2D<T> &other) 
 : Array2D(other.getWidth(), other.getHeight()) {
-
-  for(int x=0; x<getWidth(); ++x) {
-    for(int y=0; y<getHeight(); ++y) {
-      const T value = other.getValue(x, y);
-      this->setValue(x, y, value);
-    }
-  }
+  memcpy(_vals, other._vals, sizeof(T) * getArea());
 }
 
 template<class T>
@@ -74,10 +65,7 @@ Array2D<T>& Array2D<T>::operator=(const Array2D<T> &other) {
 
   _width = other.getWidth();
   _height = other.getHeight();
-  // memcpy(_vals, other._vals, other.getArea());
-  for(int i=0; i<getArea(); ++i) {
-    _vals[i] = other._vals[i];
-  }
+  memcpy(_vals, other._vals, sizeof(T) * getArea());
 
   return *this;
 }
@@ -112,26 +100,26 @@ bool Array2D<T>::operator==(const Array2D<T> &other) {
 }
 
 template<class T>
-unsigned int Array2D<T>::getWidth() const {
+unsigned Array2D<T>::getWidth() const {
   return _width;
 }
 
 template<class T>
-unsigned int Array2D<T>::getHeight() const {
+unsigned Array2D<T>::getHeight() const {
   return _height;
 }
 
 template<class T>
-unsigned int Array2D<T>::getArea() const {
+unsigned Array2D<T>::getArea() const {
   return getWidth()*getHeight();
 }
 
 template<class T>
-T* Array2D<T>::operator[](const unsigned int x) const {
+T* Array2D<T>::operator[](const unsigned x) const {
   return _vals + x*getHeight();
 }
 
 template<class T>
-T* Array2D<T>::operator[](const unsigned int x) {
+T* Array2D<T>::operator[](const unsigned x) {
   return _vals + x*getHeight();
 }
