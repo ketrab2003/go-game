@@ -31,7 +31,7 @@ public:
 
   void clear();   // mark all pixels default (empty and black)
   void fill(const Pixel pixel);  // mark all pixels empty and colored with provided background_color
-  void drawText(const char *str, const int x, const int y, const int foreground_color=WHITE, const int background_color=BLACK);    // write text with provided (x,y) as upper-left corner, \n is supported for newline
+  int drawText(const char *str, const int x, const int y, const int foreground_color=WHITE, const int background_color=BLACK);    // write text with provided (x,y) as upper-left corner, \n is supported for newline, return x position at the end of drawn text
   void drawRect(const int x, const int y, const int width, const int height, const Pixel border={}, const Pixel filling={});  // draw rectangle with provided (x,y) as upper-left corner
   void drawFilledRect(const int x, const int y, const int width, const int height, const Pixel filling={});
   void drawCanvas(const Canvas& canvas, const int& x, const int& y);

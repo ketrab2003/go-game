@@ -6,8 +6,8 @@ LINKERFLAG = -lstdc++
 
 all: main.exe
 
-main.exe: main.o conio2.o gui_utils.o go_game.o
-	${CC} ${LINKERFLAG} main.o conio2.o gui_utils.o go_game.o -o main
+main.exe: main.o conio2.o gui_utils.o go_game.o user_input.o complete_game.o
+	${CC} ${LINKERFLAG} main.o conio2.o gui_utils.o go_game.o user_input.o complete_game.o -o main
 
 main.o: main.cpp constants.h
 	${CC} -c main.cpp
@@ -20,6 +20,12 @@ gui_utils.o: gui_utils.cpp
 
 go_game.o: go_game.cpp
 	${CC} -c go_game.cpp
+
+user_input.o: user_input.cpp
+	${CC} -c user_input.cpp
+
+complete_game.o: complete_game.cpp
+	${CC} -c complete_game.cpp
 
 clean:
 	@echo "Cleaning up..."

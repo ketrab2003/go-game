@@ -85,7 +85,7 @@ void Canvas::fill(const Pixel pixel) {
   }
 }
 
-void Canvas::drawText(const char *str, const int x, const int y, const int foreground_color, const int background_color) {
+int Canvas::drawText(const char *str, const int x, const int y, const int foreground_color, const int background_color) {
   int iy = 0;
   int ix = 0;
   for(int i=0; str[i] != '\0'; ++i) {
@@ -97,6 +97,8 @@ void Canvas::drawText(const char *str, const int x, const int y, const int foreg
     setPixel(x+ix, y+iy, str[i], foreground_color, background_color);
     ix++;
   }
+
+  return x+ix;
 }
 
 void Canvas::drawRect(const int x, const int y, const int width, const int height, const Pixel border, const Pixel filling) {
