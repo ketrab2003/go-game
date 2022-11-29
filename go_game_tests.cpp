@@ -392,7 +392,30 @@ void savingAndLoading() {
 }
 
 void scoringCaptures() {
-  // TODO: implement
+  printf("Testing Scoring captures...");
+
+  GoGame game = GoGame(4);
+  assert(game.getScoreBlack() == 0 && "new game should start with 0 points");
+  assert(game.getScoreWhite() == 0 && "new game should start with 0 points");
+
+  game.placeStone(1, 2);
+  game.placeStone(2, 1);
+  game.placeStone(2, 3);
+  game.placeStone(3, 1);
+  game.confirmPlacement();
+  game.placeStone(2, 2);
+  game.confirmPlacement();
+  game.placeStone(1, 3);
+  game.confirmPlacement();
+  game.placeStone(3, 2);
+  game.confirmPlacement();
+  game.placeStone(3, 3);
+  game.confirmPlacement();
+
+  assert(game.getScoreBlack() == 2 && "after capturing two white stones black should have 2 points");
+  assert(game.getScoreWhite() == 0 && "whites should still have 0 points");
+
+  puts("OK");
 }
 
 void scoringTerritory() {
@@ -413,5 +436,7 @@ int main() {
   handicapMode();
   creatingNewGame();
   savingAndLoading();
+  scoringCaptures();
+  scoringTerritory();
   fprintf(stdout, "Passed all tests!\n");
 }
