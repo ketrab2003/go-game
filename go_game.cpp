@@ -208,6 +208,12 @@ int GoGame::_countChainLiberties(const int x, const int y, const int &visit_id) 
 
 void GoGame::_removeChain(const int x, const int y) {
   const BoardSpace here = _next_game_state.getSpace(x, y);
+  // add points during removal
+  if(here.state == blackStone) {
+    _next_game_state.score_white++;
+  } else if(here.state == whiteStone) {
+    _next_game_state.score_black++;
+  }
   _next_game_state.setSpace(x, y, empty);
   
   static const int directions[4][2] = {{0,-1},{1,0},{0,1},{-1,0}};
@@ -230,6 +236,7 @@ void GoGame::_applyNextGameState() {
 
 void GoGame::_enableHandicap() {
   _next_game_state.score_bonus_white = 0.5;
+  _game_state.score_bonus_white = 0.5;
 }
 
 GoGame::GoGame(const int board_size) :
@@ -281,6 +288,18 @@ int GoGame::getChosenX() const {
 
 int GoGame::getChosenY() const {
   return _game_state.chosen_y;
+}
+
+int GoGame::getScoreBlack() const {
+  return _game_state.score_black;
+}
+
+int GoGame::getScoreWhite() const {
+  return _game_state.score_white;
+}
+
+float GoGame::getScoreWhiteBonus() const {
+  return _game_state.score_bonus_white;
 }
 
 MoveResult GoGame::placeStone(const int x, const int y) {

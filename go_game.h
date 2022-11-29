@@ -86,6 +86,9 @@ public:
   BoardSpaceState getEnemysStone() const;    // return opposite of getPlayerStone()
   int getChosenX() const;
   int getChosenY() const;
+  int getScoreBlack() const;
+  int getScoreWhite() const;
+  float getScoreWhiteBonus() const;
 
   MoveResult placeStone(const int x, const int y);   // try to place stone at (x,y), color of stone is decided based on internal turn state
   bool confirmPlacement();

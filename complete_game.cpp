@@ -80,10 +80,13 @@ void CompleteGame::drawLegend() {
   legendBuffer.drawText(PERSONAL_DATA, 23, 0);
   legendBuffer.drawText(DONE_LIST, 23, 2);
 
+  char score_message[30];
+  sprintf(score_message, "B: %d W: %d (+%.1f)", game.getScoreBlack(), game.getScoreWhite(), game.getScoreWhiteBonus());
+  legendBuffer.drawText(score_message, 23, 5);
   char location_message[20];
   sprintf(location_message, "X: %d Y: %d", cursor.getX()+1, cursor.getY()+1);
-  legendBuffer.drawText(location_message, 23, 5);
-  legendBuffer.drawText(gameStatusMessage, 23, 6, RED);
+  legendBuffer.drawText(location_message, 23, 6);
+  legendBuffer.drawText(gameStatusMessage, 23, 7, RED);
 }
 
 void CompleteGame::drawAll() {
