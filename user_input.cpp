@@ -4,6 +4,8 @@
 #include "constants.h"
 #include "go_game.h"
 
+#define max(a, b) (a > b ? a : b)
+
 Cursor::Cursor(const int xLimit, const int yLimit, const int viewboxWidth, const int viewboxHeight) {
   _xLimit = xLimit;
   _yLimit = yLimit;
@@ -23,7 +25,9 @@ void Cursor::setX(const int x) {
   }
   if(x >= _xLimit) {
     _x = _xLimit - 1;
-    _viewboxPositionX = _xLimit - _viewboxWidth + 1;
+    if(_viewboxWidth - 1 <= getLocalX()) {
+      _viewboxPositionX = _x - _viewboxWidth + 2;
+    }
     return;
   }
   _x = x;
@@ -48,7 +52,9 @@ void Cursor::setY(const int y) {
   }
   if(y >= _yLimit) {
     _y = _yLimit - 1;
-    _viewboxPositionY = _yLimit - _viewboxHeight + 1;
+    if(_viewboxHeight - 1 <= getLocalY()) {
+      _viewboxPositionY = _y - _viewboxHeight + 2;
+    }
     return;
   }
   _y = y;

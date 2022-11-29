@@ -5,7 +5,8 @@
 #include "go_game.h"
 #include "gui_utils.h"
 #include "user_input.h"
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 void CompleteGame::setGameStatusMessage(MoveResult result) {
   char message[20];
@@ -37,7 +38,7 @@ void CompleteGame::clearGameStatusMessage() {
 }
 
 int CompleteGame::getBoardviewSize() const {
-  return min(game.getBoardSize(), BOARD_VIEW_SIZE);
+  return min(game.getBoardSize() + 2, BOARD_VIEW_SIZE);
 }
 
 void CompleteGame::drawBoard() {
@@ -107,6 +108,13 @@ void CompleteGame::printGame() {
   mainBuffer.print();
 }
 
+void CompleteGame::showAlert(const char* alert_message) {
+  mainBuffer.clear();
+  mainBuffer.drawText(alert_message, 0, 0);
+  mainBuffer.print();
+  getch();
+}
+
 int CompleteGame::getNumberFromUser(const int maxLimit) {
   mainBuffer.clear();
   const int xEndPos = mainBuffer.drawText("Provide board size: ", 0, 0);
@@ -115,10 +123,42 @@ int CompleteGame::getNumberFromUser(const int maxLimit) {
   return UserInput::getNumber(maxLimit);
 }
 
+void CompleteGame::getFilenameFromUser(char *dest, const int lengthLimit, const char* header_message) {
+  mainBuffer.clear();
+  mainBuffer.drawText(header_message, 0, 0);
+  const int xEndPos = mainBuffer.drawText("Provide filename: ", 0, 1);
+  mainBuffer.print();
+  gotoxy(xEndPos + 1, 2);
+  return UserInput::getFilename(dest, lengthLimit);
+}
+
 void CompleteGame::createNewGame() {
-  const int board_size = getNumberFromUser(9999);
+  const int board_size = getNumberFromUser(MAX_GAMEBOARD_SIZE);
   game = GoGame(board_size);
   cursor = Cursor(game.getBoardSize(), game.getBoardSize(), BOARD_VIEW_SIZE, BOARD_VIEW_SIZE);
+  clearGameStatusMessage();
+}
+
+void CompleteGame::saveGame() {
+  char filename[MAX_FILENAME_LENGTH + 1];
+  getFilenameFromUser(filename, MAX_FILENAME_LENGTH, "### SAVING GAME ###");
+  FILE *savefile = fopen(filename, "w+");
+  game.save(savefile);
+  fclose(savefile);
+  showAlert("Saved game!");
+}
+
+void CompleteGame::loadGame() {
+  char filename[MAX_FILENAME_LENGTH + 1];
+  getFilenameFromUser(filename, MAX_FILENAME_LENGTH, "### LOADING GaME ###");
+  FILE *loadfile = fopen(filename, "r");
+  if(loadfile == NULL) {
+    showAlert("Failed to load!");
+    return;
+  }
+  game.load(loadfile);
+  cursor = Cursor(game.getBoardSize(), game.getBoardSize(), BOARD_VIEW_SIZE, BOARD_VIEW_SIZE);
+  fclose(loadfile);
 }
 
 void CompleteGame::gameInit() {
@@ -160,8 +200,13 @@ void CompleteGame::gameLoop() {
       clearGameStatusMessage();
     break;
     case KEY_NEW_GAME:
-      game = GoGame(9);
-      clearGameStatusMessage();
+      createNewGame();
+    break;
+    case KEY_SAVE:
+      saveGame();
+    break;
+    case KEY_LOAD:
+      loadGame();
     break;
   }
   printGame();

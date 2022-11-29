@@ -25,10 +25,13 @@ class CompleteGame {
   void drawAll();
   void printGame();   // print game onto user's screen
 
+  void showAlert(const char* alert_message);
   int getNumberFromUser(const int maxLimit);
-  void getFilenameFromUser(char *dest, const int lengthLimit);
+  void getFilenameFromUser(char *dest, const int lengthLimit, const char* header_message);
 
   void createNewGame();
+  void saveGame();
+  void loadGame();
 
   void gameInit();
   void gameLoop();

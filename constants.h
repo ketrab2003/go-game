@@ -37,6 +37,9 @@ static const unsigned char SIGN_EMPTY = '.';
 static const unsigned char SIGN_BLACK_STONE = 'b';
 static const unsigned char SIGN_WHITE_STONE = 'w';
 
+static const int MAX_FILENAME_LENGTH = 20;
+static const int MAX_GAMEBOARD_SIZE = 9999;
+
 static const int KEY_UP = 0x148;
 static const int KEY_DOWN = 0x150;
 static const int KEY_LEFT = 0x14b;
