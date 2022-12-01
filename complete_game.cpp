@@ -1,6 +1,13 @@
 #include "complete_game.h"
 
+// include conio for windows, or special implementation for linux
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 #include "conio2.h"
+#endif
+#if __linux__
+#include "linuxconio.h"
+#endif
+
 #include "constants.h"
 #include "go_game.h"
 #include "gui_utils.h"
@@ -207,6 +214,9 @@ void CompleteGame::gameLoop() {
     break;
     case KEY_LOAD:
       loadGame();
+    break;
+    case KEY_FINISH_GAME:
+      game.finishGame();
     break;
   }
   printGame();

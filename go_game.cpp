@@ -24,10 +24,18 @@ GameState::GameState(const int board_size)
   isFirstTurn = true;
 }
 
-void GameState::reset_visited() {
+void GameState::resetVisited() {
   for(int x=0; x<getBoardSize(); ++x) {
     for(int y=0; y<getBoardSize(); ++y) {
       _board[x][y].visited_id = -1;
+    }
+  }
+}
+
+void GameState::resetOwnership() {
+  for(int x=0; x<getBoardSize(); ++x) {
+    for(int y=0; y<getBoardSize(); ++y) {
+      _board[x][y].territory_owner = none;
     }
   }
 }
@@ -58,6 +66,13 @@ void GameState::visitSpace(const int x, const int y, const int id) {
     return;
   }
   _board[x][y].visited_id = id;
+}
+
+void GameState::setSpaceOwner(const int x, const int y, const Player owner) {
+  if(!_validCoords(x, y)) {
+    return;
+  }
+  _board[x][y].territory_owner = owner;
 }
 
 int GameState::getBoardSize() const {
@@ -145,6 +160,7 @@ bool GoGame::_isFirstTurn() const {
 
 void GoGame::_generateNextGameState() {
   _next_game_state = _game_state;
+  _next_game_state.resetVisited();
 
   const int start_x = _next_game_state.chosen_x;
   const int start_y = _next_game_state.chosen_y;
@@ -168,7 +184,6 @@ void GoGame::_generateNextGameState() {
 
   _next_game_state.chosen_x = -1;
   _next_game_state.chosen_y = -1;
-  _next_game_state.reset_visited();
 
   switch (_game_state.turn) {
     case black:
@@ -176,6 +191,8 @@ void GoGame::_generateNextGameState() {
     break;
     case white:
       _next_game_state.turn = black;
+    break;
+    default:
     break;
   }
 }
@@ -214,6 +231,7 @@ void GoGame::_removeChain(const int x, const int y) {
   } else if(here.state == whiteStone) {
     _next_game_state.score_black++;
   }
+
   _next_game_state.setSpace(x, y, empty);
   
   static const int directions[4][2] = {{0,-1},{1,0},{0,1},{-1,0}};
@@ -232,6 +250,134 @@ void GoGame::_applyNextGameState() {
   _game_state = _next_game_state;
   _game_state.isFirstTurn = false;
   _original_game_state = _game_state;
+}
+
+void GoGame::_removeDeadChains() {
+  _setAllTerritoriesOwner();
+
+  int visit_id = 1;
+  for(int x=0; x<getBoardSize(); ++x) {
+    for(int y=0; y<0; ++y) {
+      const BoardSpace ispace = _next_game_state.getSpace(x, y);
+      if(ispace.state != empty && ispace.visited_id < visit_id && _isChainDead(x, y, visit_id++)) {
+        _removeChain(x, y);
+      }
+    }
+  }
+}
+
+bool GoGame::_isChainDead(const int x, const int y, const int &visit_id) {
+  const BoardSpace here = _next_game_state.getSpace(x, y);
+  bool isDead = true;
+
+  static const int directions[4][2] = {{0,-1},{1,0},{0,1},{-1,0}};
+  for(auto direction : directions) {
+    const int ix = x+direction[0];
+    const int iy = y+direction[1];
+    const BoardSpace space = _next_game_state.getSpace(ix, iy);
+
+    if(space.state == here.state && space.visited_id != visit_id) {
+      isDead &= _isChainDead(ix, iy, visit_id);
+    } else if(space.state == empty) {
+      switch(here.state) {
+        case blackStone:
+          if(space.territory_owner == black) {
+            return false;
+          }
+        break;
+        case whiteStone:
+          if(space.territory_owner == white) {
+            return false;
+          }
+        break;
+        default:
+        break;
+      }
+    }
+
+    if(!isDead) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+void GoGame::_setAllTerritoriesOwner() {
+  _next_game_state.resetVisited();
+  _next_game_state.resetOwnership();
+
+  int visit_id = 1;
+  for(int x=0; x<getBoardSize(); ++x) {
+    for(int y=0; y<getBoardSize(); ++y) {
+      const BoardSpace space = _next_game_state.getSpace(x, y);
+      if(space.state == empty && space.visited_id < visit_id) {
+        const Player owner = _identifyTerritory(x, y, visit_id++);
+        _setTerritoryOwner(x, y, owner);
+      }
+    }
+  }
+}
+
+Player GoGame::_identifyTerritory(const int x, const int y, const int &visit_id) {
+  const BoardSpace here = _next_game_state.getSpace(x, y);
+  Player here_owner = none;
+
+  static const int directions[4][2] = {{0,-1},{1,0},{0,1},{-1,0}};
+  for(auto direction : directions) {
+    const int ix = x+direction[0];
+    const int iy = y+direction[1];
+    const BoardSpace ispace = _next_game_state.getSpace(ix, iy);
+    if(ispace.state == empty && ispace.visited_id != visit_id) {
+      const Player neighbour_owner = _identifyTerritory(ix, iy, visit_id);
+      if(neighbour_owner == none) {
+        return none;
+      } else if(here_owner == none || here_owner == neighbour_owner) {
+        here_owner = neighbour_owner;
+      } else {
+        return none;
+      }
+    }
+  }
+
+  return here_owner;
+}
+
+void GoGame::_setTerritoryOwner(const int x, const int y, const Player &owner) {
+  const BoardSpace here = _next_game_state.getSpace(x, y);
+  if(here.state != empty) {
+    return;
+  }
+  if(here.territory_owner == owner) {
+    return;
+  }
+
+  _next_game_state.setSpaceOwner(x, y, owner);
+
+  static const int directions[4][2] = {{0,-1},{1,0},{0,1},{-1,0}};
+  for(auto direction : directions) {
+    const int ix = x+direction[0];
+    const int iy = y+direction[1];
+    _setTerritoryOwner(ix, iy, owner);
+  }
+}
+
+void GoGame::_countTerritoryPoints() {
+  for(int x=0; x<getBoardSize(); ++x) {
+    for(int y=0; y<getBoardSize(); ++y) {
+      const BoardSpace space = _next_game_state.getSpace(x, y);
+      switch(space.territory_owner) {
+        case black:
+          _next_game_state.score_black++;
+        break;
+        case white:
+          _next_game_state.score_white++;
+        break;
+        default:
+        break;
+      }
+    }
+  }
 }
 
 void GoGame::_enableHandicap() {
@@ -266,8 +412,10 @@ BoardSpaceState GoGame::getPlayersStone() const {
     case white:
       return whiteStone;
     break;
+    default:
+      return empty;
+    break;
   }
-  return empty;
 }
 
 BoardSpaceState GoGame::getEnemysStone() const {
@@ -278,8 +426,10 @@ BoardSpaceState GoGame::getEnemysStone() const {
     case white:
       return blackStone;
     break;
+    default:
+      return empty;
+    break;
   }
-  return empty;
 }
 
 int GoGame::getChosenX() const {
@@ -356,6 +506,13 @@ bool GoGame::confirmPlacement() {
 
 void GoGame::cancelPlacement() {
   _game_state = _original_game_state;
+}
+
+void GoGame::finishGame() {
+  _removeDeadChains();
+  _setAllTerritoriesOwner();
+  _countTerritoryPoints();
+  _game_state = _next_game_state;
 }
 
 void GoGame::save(FILE *file) const {

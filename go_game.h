@@ -15,6 +15,7 @@ enum MoveResult {
 enum Player {
   black = 0,
   white = 1,
+  none = 2,
 };
 
 enum BoardSpaceState {
@@ -27,6 +28,7 @@ enum BoardSpaceState {
 struct BoardSpace {
   BoardSpaceState state = empty;
   int visited_id = -1;
+  Player territory_owner = none;
 };
 
 class GameState {
@@ -44,12 +46,14 @@ public:
   int chosen_x, chosen_y;
 
   GameState(const int board_size);
-  void reset_visited();
+  void resetVisited();
+  void resetOwnership();
 
   BoardSpace getSpace(const int x, const int y) const;
   void setSpace(const int x, const int y, const BoardSpace space);
   void setSpace(const int x, const int y, const BoardSpaceState space_state);
   void visitSpace(const int x, const int y, const int id);
+  void setSpaceOwner(const int x, const int y, const Player owner);
 
   int getBoardSize() const;
 
@@ -70,8 +74,15 @@ class GoGame {
 
   void _generateNextGameState();
   int _countChainLiberties(const int x, const int y, const int &visit_id);
-  void _removeChain(const int x, const int y);
+  void _removeChain(const int x, const int y);    // remove chain with selected node, also add score to player
   void _applyNextGameState();
+
+  void _removeDeadChains();
+  bool _isChainDead(const int x, const int y, const int &visit_id);
+  void _setAllTerritoriesOwner();
+  Player _identifyTerritory(const int x, const int y, const int &visit_id);
+  void _setTerritoryOwner(const int x, const int y, const Player &new_owner);
+  void _countTerritoryPoints();
 
   void _enableHandicap();
 
@@ -93,6 +104,8 @@ public:
   MoveResult placeStone(const int x, const int y);   // try to place stone at (x,y), color of stone is decided based on internal turn state
   bool confirmPlacement();
   void cancelPlacement();
+
+  void finishGame();    // count and add to score territory points
 
   void save(FILE *file) const;
   void load(FILE *file);

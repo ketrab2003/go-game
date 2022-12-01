@@ -1,13 +1,13 @@
 .PHONY = all clean
 
-CC = winegcc
+CC = g++
 
 LINKERFLAG = -lstdc++
 
 all: main.exe
 
 main.exe: main.o conio2.o gui_utils.o go_game.o user_input.o complete_game.o
-	${CC} ${LINKERFLAG} main.o conio2.o gui_utils.o go_game.o user_input.o complete_game.o -o main
+	${CC} ${LINKERFLAG} main.o linuxconio.o gui_utils.o go_game.o user_input.o complete_game.o -o main
 
 main.o: main.cpp constants.h
 	${CC} -c main.cpp

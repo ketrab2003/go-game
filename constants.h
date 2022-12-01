@@ -3,10 +3,10 @@
 #define min(a, b) (a < b ? a : b)
 
 
-static const int BOARD_VIEW_SIZE = 9;
+static const int BOARD_VIEW_SIZE = 10;
 
 static const int LEGEND_WIDTH = 50;
-static const int LEGEND_HEIGHT = 9;
+static const int LEGEND_HEIGHT = 10;
 
 static const int TERMINAL_WIDTH = 1 + BOARD_VIEW_SIZE + LEGEND_WIDTH;
 static const int TERMINAL_HEIGHT = max(BOARD_VIEW_SIZE, LEGEND_HEIGHT);
@@ -19,7 +19,8 @@ static const char *INSTRUCTIONS = "Instructions:\n"
                                   "esc - cancel action\n"
                                   "s - save game\n"
                                   "l - load game\n"
-                                  "q - quit\n";
+                                  "q - quit\n"
+                                  "f - finish game\n";
 
 static const char *PERSONAL_DATA = "Bartlomiej Krawisz, 193319";
 
