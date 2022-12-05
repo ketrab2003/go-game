@@ -27,8 +27,9 @@ class CompleteGame {
 
   // user dialog logic
   void showAlert(const char* alert_message);
-  int getNumberFromUser(const int maxLimit);
   void getFilenameFromUser(char *dest, const int lengthLimit, const char* header_message);
+  int getBoardSizeFromUser();
+  int askBoardSize();
   void showGameResult();
 
   void createNewGame();

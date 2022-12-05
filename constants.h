@@ -31,7 +31,6 @@ static const char *ALREADY_PLACED_MESSAGE = "already placed";
 static const char *KO_MESSAGE = "ko rule";
 
 // other messages
-static const char *BOARD_SIZE_QUERY = "Provide board size: ";
 static const char *FILENAME_QUERY = "Provide filename: ";
 static const char *SAVING_HEADER = "### SAVING GAME ###";
 static const char *LOADING_HEADER = "### LOADING GAME ###";
@@ -45,15 +44,20 @@ static const char *GAME_FINISH_DIALOG_INSTRUCTIONS =
                                 "Press ESC to cancel\n"
                                 "Press q to quit\n";
 
+static const char *CHOOSE_BOARD_SIZE_HEADER = "### Choose board size ###";
+static const char *BOARD_SIZES[] = {"9x9", "13x13", "19x19", "other"};
+static const int BOARD_SIZE_VALUES[] = {9, 13, 19, -1};   // sizes defined in BOARD_SIZES (-1 means user input)
+static const char *BOARD_SIZE_QUERY = "Provide board size: ";
+
 // user dialog restrictions
 static const int MAX_FILENAME_LENGTH = 20;
-static const int MAX_GAMEBOARD_SIZE = 9999;
+static const int MAX_GAMEBOARD_SIZE = 999;
 
 // border view
 static const unsigned char BORDER_SIGN = '#';
 static const unsigned char EMPTY_SIGN = '.';
 static const unsigned char EMPTY_COLOR = WHITE;
-static const unsigned char EMPTY_BACKGROUND = BLACK;
+static const unsigned char EMPTY_BACKGROUND = DARKGRAY;
 static const unsigned char BLACK_STONE_SIGN = 'b';
 static const unsigned char BLACK_STONE_COLOR = WHITE;
 static const unsigned char BLACK_STONE_BACKGROUND = BLACK;

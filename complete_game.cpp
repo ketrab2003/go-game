@@ -124,14 +124,6 @@ void CompleteGame::showAlert(const char* alert_message) {
   UserInput::getKey();
 }
 
-int CompleteGame::getNumberFromUser(const int maxLimit) {
-  mainBuffer.clear();
-  const int xEndPos = mainBuffer.drawText(BOARD_SIZE_QUERY, 0, 0);
-  mainBuffer.print();
-  gotoxy(xEndPos + 1, 1);
-  return UserInput::getNumber(2, maxLimit);
-}
-
 void CompleteGame::getFilenameFromUser(char *dest, const int lengthLimit, const char* header_message) {
   mainBuffer.clear();
   mainBuffer.drawText(header_message, 0, 0);
@@ -139,6 +131,66 @@ void CompleteGame::getFilenameFromUser(char *dest, const int lengthLimit, const 
   mainBuffer.print();
   gotoxy(xEndPos + 1, 2);
   return UserInput::getFilename(dest, lengthLimit);
+}
+
+int CompleteGame::getBoardSizeFromUser() {
+  mainBuffer.clear();
+  mainBuffer.drawText(CHOOSE_BOARD_SIZE_HEADER, 0, 0);
+  const int xEndPos = mainBuffer.drawText(BOARD_SIZE_QUERY, 0, 1);
+  mainBuffer.print();
+  gotoxy(xEndPos + 1, 2);
+  return UserInput::getNumber(2, MAX_GAMEBOARD_SIZE);
+}
+
+int CompleteGame::askBoardSize() {
+  mainBuffer.clear();
+  mainBuffer.drawText(CHOOSE_BOARD_SIZE_HEADER, 0, 0);
+
+  const int choiceLimit = sizeof(BOARD_SIZES)/sizeof(BOARD_SIZES[0]);
+  int chosen = 0;
+
+  bool dialog_loop = true;
+  while(dialog_loop) {
+    // print choices
+    int offset = 0;
+    unsigned char background_color, foreground_color;
+    for(int i=0; i<choiceLimit; ++i) {
+      if(i == chosen) {
+        background_color = WHITE;
+        foreground_color = BLACK;
+      } else {
+        background_color = BLACK;
+        foreground_color = WHITE;
+      }
+      const int xEndPos = mainBuffer.drawText(BOARD_SIZES[i], offset, 1, foreground_color, background_color);
+      offset = xEndPos + 1;
+    }
+
+    mainBuffer.print();
+
+    switch(UserInput::getKey()) {
+      case KEY_LEFT:
+        if(chosen > 0) {
+          chosen--;
+        }
+      break;
+      case KEY_RIGHT:
+        if(chosen < choiceLimit - 1) {
+          chosen++;
+        }
+      break;
+      case KEY_CONFIRM:
+        dialog_loop = false;
+      break;
+    }
+  }
+
+  // other board size
+  if(BOARD_SIZE_VALUES[chosen] < 0) {
+    return getBoardSizeFromUser();
+  }
+
+  return BOARD_SIZE_VALUES[chosen];
 }
 
 void CompleteGame::showGameResult() {
@@ -182,7 +234,7 @@ void CompleteGame::showGameResult() {
 }
 
 void CompleteGame::createNewGame() {
-  const int board_size = getNumberFromUser(MAX_GAMEBOARD_SIZE);
+  const int board_size = askBoardSize();
   game = GoGame(board_size);
   cursor = Cursor(game.getBoardSize(), game.getBoardSize(), getBoardviewSize(), getBoardviewSize());
   clearGameStatusMessage();
