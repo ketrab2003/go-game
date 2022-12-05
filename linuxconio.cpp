@@ -1,6 +1,8 @@
 #include "linuxconio.h"
-#include "linuxconio.h"
+
 #include <cstdio>
+#include <termios.h>
+#include <unistd.h>
 
 int cursor_x=1, cursor_y=1;
 
@@ -46,16 +48,27 @@ void clrscr() {
   printf("\e[2J");
 }
 
-int getch_zero_buffer = 0;
-
-int getch() {
-  if(getch_zero_buffer) {
-    int temp = getch_zero_buffer;
-    getch_zero_buffer = 0;
-    return temp;
-  }
-  getch_zero_buffer = getchar();
-
+int getch(void)
+{
+  char buf = 0;
+  struct termios old = {0};
+  fflush(stdout);
+  if(tcgetattr(0, &old) < 0)
+      perror("tcsetattr()");
+  old.c_lflag &= ~ICANON;
+  old.c_lflag &= ~ECHO;
+  old.c_cc[VMIN] = 1;
+  old.c_cc[VTIME] = 0;
+  if(tcsetattr(0, TCSANOW, &old) < 0)
+      perror("tcsetattr ICANON");
+  if(read(0, &buf, 1) < 0)
+      perror("read()");
+  old.c_lflag |= ICANON;
+  old.c_lflag |= ECHO;
+  if(tcsetattr(0, TCSADRAIN, &old) < 0)
+      perror("tcsetattr ~ICANON");
+  printf(" 0x%x ", buf);
+  return buf;
 }
 
 int putch(int c) {
