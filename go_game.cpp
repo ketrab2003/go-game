@@ -17,7 +17,7 @@ GameState::GameState(const int board_size)
   _board_size = board_size;
   score_black = 0;
   score_white = 0;
-  score_bonus_white = 6.5;
+  score_bonus_white = WHITE_BONUS;
   turn = black;
   chosen_x = -1;
   chosen_y = -1;
@@ -435,8 +435,8 @@ void GoGame::_countTerritoryPoints() {
 
 
 void GoGame::_enableHandicap() {
-  _next_game_state.score_bonus_white = 0.5;
-  _game_state.score_bonus_white = 0.5;
+  _next_game_state.score_bonus_white = WHITE_BONUS_WITH_HANDICAP;
+  _game_state.score_bonus_white = WHITE_BONUS_WITH_HANDICAP;
 }
 
 GoGame::GoGame(const int board_size) :
@@ -506,6 +506,19 @@ float GoGame::getScoreWhiteBonus() const {
   return _game_state.score_bonus_white;
 }
 
+Player GoGame::whoWon() const {
+  const float black_final_score = getScoreBlack();
+  const float white_final_score = getScoreWhite() + getScoreWhiteBonus();
+  if(black_final_score == white_final_score) {
+    return none;
+  }
+  if(black_final_score > white_final_score) {
+    return black;
+  } else {
+    return white;
+  }
+}
+
 MoveResult GoGame::placeStone(const int x, const int y) {
   if(_madePlacement() && !_isFirstTurn()) {
     return already_placed;
@@ -563,6 +576,7 @@ void GoGame::cancelPlacement() {
 }
 
 void GoGame::finishGame() {
+  _next_game_state = _game_state;
   _markDeadChains();
   _setAllTerritoriesOwner();
   _countTerritoryPoints();

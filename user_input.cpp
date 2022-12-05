@@ -172,7 +172,8 @@ void UserInput::getFilename(char *dest, const int lengthLimit) {
     if(('a' <= input_key && input_key <= 'z')
     || ('A' <= input_key && input_key <= 'Z')
     || ('0' <= input_key && input_key <= '9')
-    || (input_key == '.')) {
+    || (input_key == '.')
+    || (input_key == '_')) {
       dest[position] = input_key;
       position++;
       putch(input_key);

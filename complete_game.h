@@ -17,17 +17,19 @@ class CompleteGame {
 	void setGameStatusMessage(MoveResult result);
 	void clearGameStatusMessage();
 
+  // drawing logic
   int getBoardviewSize() const;
-
   void drawBoard();
   Pixel getBoardSign(BoardSpace space) const;
   void drawLegend();
   void drawAll();
   void printGame();   // print game onto user's screen
 
+  // user dialog logic
   void showAlert(const char* alert_message);
   int getNumberFromUser(const int maxLimit);
   void getFilenameFromUser(char *dest, const int lengthLimit, const char* header_message);
+  void showGameResult();
 
   void createNewGame();
   void saveGame();

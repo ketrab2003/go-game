@@ -16,6 +16,9 @@ int GUIUtils::getTerminalHeight() {
 }
 
 void GUIUtils::initializeGui(const char *window_title) {
+#ifndef __cplusplus
+	Conio2_Init();
+#endif
   settitle(window_title);
 	clrscr();
 	_setcursortype(_NOCURSOR);

@@ -68,14 +68,14 @@ void CompleteGame::drawBoard() {
 Pixel CompleteGame::getBoardSign(BoardSpace space) const {
 	switch (space.state) {
 		case blackStone:
-			return {SIGN_BLACK_STONE, WHITE, BLACK};
+			return {BLACK_STONE_SIGN, BLACK_STONE_COLOR, BLACK_STONE_BACKGROUND};
 		case whiteStone:
-			return {SIGN_WHITE_STONE, BLACK, WHITE};
+			return {WHITE_STONE_SIGN, WHITE_STONE_COLOR, WHITE_STONE_BACKGROUND};
 		case edge:
 			return {BORDER_SIGN};
 		case empty:
 		default:
-			return {SIGN_EMPTY, BLACK, DARKGRAY};
+			return {EMPTY_SIGN, EMPTY_COLOR, EMPTY_BACKGROUND};
 	}
 }
 
@@ -126,7 +126,7 @@ void CompleteGame::showAlert(const char* alert_message) {
 
 int CompleteGame::getNumberFromUser(const int maxLimit) {
   mainBuffer.clear();
-  const int xEndPos = mainBuffer.drawText("Provide board size: ", 0, 0);
+  const int xEndPos = mainBuffer.drawText(BOARD_SIZE_QUERY, 0, 0);
   mainBuffer.print();
   gotoxy(xEndPos + 1, 1);
   return UserInput::getNumber(2, maxLimit);
@@ -135,10 +135,50 @@ int CompleteGame::getNumberFromUser(const int maxLimit) {
 void CompleteGame::getFilenameFromUser(char *dest, const int lengthLimit, const char* header_message) {
   mainBuffer.clear();
   mainBuffer.drawText(header_message, 0, 0);
-  const int xEndPos = mainBuffer.drawText("Provide filename: ", 0, 1);
+  const int xEndPos = mainBuffer.drawText(FILENAME_QUERY, 0, 1);
   mainBuffer.print();
   gotoxy(xEndPos + 1, 2);
   return UserInput::getFilename(dest, lengthLimit);
+}
+
+void CompleteGame::showGameResult() {
+  mainBuffer.clear();
+  char score_message[30];
+  sprintf(score_message, "B: %d W: %d (+%.1f)", game.getScoreBlack(), game.getScoreWhite(), game.getScoreWhiteBonus());
+  mainBuffer.drawText(score_message, 0, 1);
+  char result_message[30] = "";
+  switch(game.whoWon()) {
+    case black:
+      strcpy(result_message, BLACK_WON_MESSAGE);
+    break;
+    case white:
+      strcpy(result_message, WHITE_WON_MESSAGE);
+    break;
+    default:
+    break;
+  }
+  mainBuffer.drawText(result_message, 0, 2);
+  mainBuffer.drawText(GAME_FINISH_DIALOG_INSTRUCTIONS, 0, 3);
+  mainBuffer.print();
+  
+  bool dialog_loop = true;
+  while(dialog_loop) {
+    dialog_loop = false;
+    switch(UserInput::getKey()) {
+      case KEY_NEW_GAME:
+        createNewGame();
+      break;
+      case KEY_CANCEL:
+        game.cancelPlacement();
+      break;
+      case KEY_QUIT:
+        gameIsRunning = false;
+      break;
+      default:
+        dialog_loop = true;
+      break;
+    }
+  }
 }
 
 void CompleteGame::createNewGame() {
@@ -150,19 +190,19 @@ void CompleteGame::createNewGame() {
 
 void CompleteGame::saveGame() {
   char filename[MAX_FILENAME_LENGTH + 1];
-  getFilenameFromUser(filename, MAX_FILENAME_LENGTH, "### SAVING GAME ###");
+  getFilenameFromUser(filename, MAX_FILENAME_LENGTH, SAVING_HEADER);
   FILE *savefile = fopen(filename, "w+");
   game.save(savefile);
   fclose(savefile);
-  showAlert("Saved game!");
+  showAlert(SAVE_SUCCESS);
 }
 
 void CompleteGame::loadGame() {
   char filename[MAX_FILENAME_LENGTH + 1];
-  getFilenameFromUser(filename, MAX_FILENAME_LENGTH, "### LOADING GaME ###");
+  getFilenameFromUser(filename, MAX_FILENAME_LENGTH, LOADING_HEADER);
   FILE *loadfile = fopen(filename, "r");
   if(loadfile == NULL) {
-    showAlert("Failed to load!");
+    showAlert(LOAD_ERROR);
     return;
   }
   game.load(loadfile);
@@ -217,6 +257,7 @@ void CompleteGame::gameLoop() {
     break;
     case KEY_FINISH_GAME:
       game.finishGame();
+      showGameResult();
     break;
   }
   printGame();

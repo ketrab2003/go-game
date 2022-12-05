@@ -3,6 +3,9 @@
 #include "array2D.h"
 #include <cstdio>
 
+static const float WHITE_BONUS = 6.5;
+static const float WHITE_BONUS_WITH_HANDICAP = 0.5;
+
 enum MoveResult {
   done,
   occupied,
@@ -103,9 +106,11 @@ public:
   BoardSpaceState getEnemysStone() const;    // return opposite of getPlayerStone()
   int getChosenX() const;
   int getChosenY() const;
+
   int getScoreBlack() const;
   int getScoreWhite() const;
   float getScoreWhiteBonus() const;
+  Player whoWon() const;
 
   MoveResult placeStone(const int x, const int y);   // try to place stone at (x,y), color of stone is decided based on internal turn state
   bool confirmPlacement();
