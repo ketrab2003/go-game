@@ -28,9 +28,8 @@ public:
 	void moveRelative(const int x, const int y);
 };
 
-class UserInput {
-public:
+struct UserInput {
   static int getKey();
-  static int getNumber(const int maxLimit);
+  static int getNumber(const int minLimit, const int maxLimit);
   static void getFilename(char *dest, const int lengthLimit);
 };

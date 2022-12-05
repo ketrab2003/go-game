@@ -3,12 +3,23 @@
 #include "conio2.h"
 #include "array2D.h"
 
+struct GUIUtils {
+  static int getTerminalWidth();
+  static int getTerminalHeight();
+  static void initializeGui(const char *window_title);
+  static void deinitializeGui();
+};
+
 struct Pixel {
   unsigned char sign = ' ';
-	int foreground_color = WHITE;
-	int background_color = BLACK;
+	unsigned char foreground_color = WHITE;
+	unsigned char background_color = BLACK;
 
-  void print() const;
+  unsigned char last_printed[2] = {0, 0};
+
+  unsigned char getAttr() const;
+  bool alreadyPrinted() const;
+  void print();
 };
 
 class Canvas {
@@ -24,9 +35,9 @@ public:
   Pixel getPixel(const int x, const int y) const;
 
   void setPixel(const int x, const int y, const Pixel pixel={});
-  void setPixel(const int x, const int y, const unsigned char sign, const int foreground_color=WHITE, const int background_color=BLACK);
-  void setPixelBackground(const int x, const int y, const int background_color);
-  void setPixelForeground(const int x, const int y, const int foreground_color);
+  void setPixel(const int x, const int y, const unsigned char sign, const unsigned char foreground_color=WHITE, const unsigned char background_color=BLACK);
+  void setPixelBackground(const int x, const int y, const unsigned char background_color);
+  void setPixelForeground(const int x, const int y, const unsigned char foreground_color);
   void setPixelSign(const int x, const int y, const unsigned char sign);
 
   void clear();   // mark all pixels default (empty and black)
@@ -36,5 +47,5 @@ public:
   void drawFilledRect(const int x, const int y, const int width, const int height, const Pixel filling={});
   void drawCanvas(const Canvas& canvas, const int& x, const int& y);
 
-  void print(const int x=1, const int y=1) const;
+  void print(const int x=1, const int y=1);
 };

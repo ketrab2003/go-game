@@ -38,10 +38,14 @@ void CompleteGame::clearGameStatusMessage() {
 }
 
 int CompleteGame::getBoardviewSize() const {
-  return min(game.getBoardSize() + 2, BOARD_VIEW_SIZE);
+  const int buffer_limit = min(mainBuffer.getWidth() - LEGEND_WIDTH - 2, mainBuffer.getHeight() - 2);
+  return min(game.getBoardSize() + 2, buffer_limit);
 }
 
 void CompleteGame::drawBoard() {
+  if(boardBuffer.getWidth() != getBoardviewSize()) {
+    boardBuffer = Canvas(getBoardviewSize(), getBoardviewSize());
+  }
 	boardBuffer.clear();
 
   const int offset_x = cursor.getViewboxPositionX();
@@ -91,6 +95,11 @@ void CompleteGame::drawLegend() {
 }
 
 void CompleteGame::drawAll() {
+  if(mainBuffer.getWidth() != GUIUtils::getTerminalWidth()
+  || mainBuffer.getHeight() != GUIUtils::getTerminalHeight()) {
+    mainBuffer = Canvas(GUIUtils::getTerminalWidth(), GUIUtils::getTerminalHeight());
+  }
+
   drawBoard();
   drawLegend();
 
@@ -120,7 +129,7 @@ int CompleteGame::getNumberFromUser(const int maxLimit) {
   const int xEndPos = mainBuffer.drawText("Provide board size: ", 0, 0);
   mainBuffer.print();
   gotoxy(xEndPos + 1, 1);
-  return UserInput::getNumber(maxLimit);
+  return UserInput::getNumber(2, maxLimit);
 }
 
 void CompleteGame::getFilenameFromUser(char *dest, const int lengthLimit, const char* header_message) {
@@ -135,7 +144,7 @@ void CompleteGame::getFilenameFromUser(char *dest, const int lengthLimit, const 
 void CompleteGame::createNewGame() {
   const int board_size = getNumberFromUser(MAX_GAMEBOARD_SIZE);
   game = GoGame(board_size);
-  cursor = Cursor(game.getBoardSize(), game.getBoardSize(), BOARD_VIEW_SIZE, BOARD_VIEW_SIZE);
+  cursor = Cursor(game.getBoardSize(), game.getBoardSize(), getBoardviewSize(), getBoardviewSize());
   clearGameStatusMessage();
 }
 
@@ -157,14 +166,12 @@ void CompleteGame::loadGame() {
     return;
   }
   game.load(loadfile);
-  cursor = Cursor(game.getBoardSize(), game.getBoardSize(), BOARD_VIEW_SIZE, BOARD_VIEW_SIZE);
+  cursor = Cursor(game.getBoardSize(), game.getBoardSize(), getBoardviewSize(), getBoardviewSize());
   fclose(loadfile);
 }
 
 void CompleteGame::gameInit() {
-  settitle(PERSONAL_DATA);
-	clrscr();
-	_setcursortype(_NOCURSOR);
+  GUIUtils::initializeGui(PERSONAL_DATA);
   createNewGame();
   printGame();
 }
@@ -216,18 +223,16 @@ void CompleteGame::gameLoop() {
 }
 
 void CompleteGame::gameExit() {
-  clrscr();
-	gotoxy(1, 1);
-	_setcursortype(_NORMALCURSOR);
+  GUIUtils::deinitializeGui();
 }
 
 CompleteGame::CompleteGame()
 : game(0),
   cursor(0, 0, 0, 0),
-  mainBuffer(TERMINAL_WIDTH, TERMINAL_HEIGHT),
-  boardBuffer(BOARD_VIEW_SIZE, BOARD_VIEW_SIZE),
+  mainBuffer(GUIUtils::getTerminalWidth(), GUIUtils::getTerminalHeight()),
+  boardBuffer(getBoardviewSize(), getBoardviewSize()),
   legendBuffer(LEGEND_WIDTH, LEGEND_HEIGHT),
-  spacer(1, TERMINAL_HEIGHT) {
+  spacer(1, GUIUtils::getTerminalHeight()) {
   gameIsRunning = true;
 }
 

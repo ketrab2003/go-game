@@ -17,7 +17,7 @@ class CompleteGame {
 	void setGameStatusMessage(MoveResult result);
 	void clearGameStatusMessage();
 
-  int getBoardviewSize() const; 
+  int getBoardviewSize() const;
 
   void drawBoard();
   Pixel getBoardSign(BoardSpace space) const;

@@ -1,13 +1,6 @@
 #include "user_input.h"
 
-// include conio for windows, or special implementation for linux
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 #include "conio2.h"
-#endif
-#if __linux__
-#include "linuxconio.h"
-#endif
-
 #include "constants.h"
 #include "go_game.h"
 
@@ -113,10 +106,12 @@ int UserInput::getKey() {
 	return input;
 }
 
-int UserInput::getNumber(const int maxLimit) {
+int UserInput::getNumber(const int minLimit, const int maxLimit) {
   _setcursortype(_NORMALCURSOR);
   int readValue = 0;
   int position = 0;
+
+  const int start_x = wherex();
 
   while(true) {
     int input_key = getKey();
@@ -139,9 +134,15 @@ int UserInput::getNumber(const int maxLimit) {
         readValue /= 10;
       }
     } else
-    if(input_key == KEY_CONFIRM) {
+    if(input_key == KEY_CONFIRM && readValue >= minLimit) {
       break;
     }
+  }
+
+  // erase input from screen (it is handled outside of buffer)
+  gotoxy(start_x, wherey());
+  for(int i=0; i<position; ++i) {
+    putch(' ');
   }
 
   _setcursortype(_NOCURSOR);
@@ -151,6 +152,8 @@ int UserInput::getNumber(const int maxLimit) {
 void UserInput::getFilename(char *dest, const int lengthLimit) {
   _setcursortype(_NORMALCURSOR);
   int position = 0;
+
+  const int start_x = wherex();
 
   while(true) {
     int input_key = getKey();
@@ -177,6 +180,12 @@ void UserInput::getFilename(char *dest, const int lengthLimit) {
     if(input_key == KEY_CONFIRM) {
       break;
     }
+  }
+
+  // erase input from screen (it is handled outside of buffer)
+  gotoxy(start_x, wherey());
+  for(int i=0; i<position; ++i) {
+    putch(' ');
   }
 
   dest[position] = '\0';

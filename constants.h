@@ -2,14 +2,8 @@
 #define max(a, b) (a > b ? a : b)
 #define min(a, b) (a < b ? a : b)
 
-
-static const int BOARD_VIEW_SIZE = 10;
-
 static const int LEGEND_WIDTH = 50;
 static const int LEGEND_HEIGHT = 10;
-
-static const int TERMINAL_WIDTH = 1 + BOARD_VIEW_SIZE + LEGEND_WIDTH;
-static const int TERMINAL_HEIGHT = max(BOARD_VIEW_SIZE, LEGEND_HEIGHT);
 
 static const char *INSTRUCTIONS = "Instructions:\n"
                                   "arrows - move cursor\n"
