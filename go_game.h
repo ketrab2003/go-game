@@ -13,9 +13,9 @@ enum MoveResult {
 };
 
 enum Player {
-  black = 0,
-  white = 1,
-  none = 2,
+  none = 0,
+  black = 1,
+  white = 2,
 };
 
 enum BoardSpaceState {
@@ -29,6 +29,7 @@ struct BoardSpace {
   BoardSpaceState state = empty;
   int visited_id = -1;
   Player territory_owner = none;
+  bool is_dead = false;
 };
 
 class GameState {
@@ -48,12 +49,14 @@ public:
   GameState(const int board_size);
   void resetVisited();
   void resetOwnership();
+  void resetDeadChains();
 
   BoardSpace getSpace(const int x, const int y) const;
   void setSpace(const int x, const int y, const BoardSpace space);
   void setSpace(const int x, const int y, const BoardSpaceState space_state);
   void visitSpace(const int x, const int y, const int id);
   void setSpaceOwner(const int x, const int y, const Player owner);
+  void setSpaceDead(const int x, const int y);
 
   int getBoardSize() const;
 
@@ -72,13 +75,16 @@ class GoGame {
   bool _madePlacement() const;
   bool _isFirstTurn() const;
 
+  // next game state generation (all logic related to capturing)
   void _generateNextGameState();
   int _countChainLiberties(const int x, const int y, const int &visit_id);
-  void _removeChain(const int x, const int y);    // remove chain with selected node, also add score to player
+  void _removeChain(const int x, const int y, const bool add_points);    // remove chain with selected node, also add score to player if add_points id true
   void _applyNextGameState();
 
-  void _removeDeadChains();
+  // territory scoring logic
+  void _markDeadChains();
   bool _isChainDead(const int x, const int y, const int &visit_id);
+  void _markDeadChain(const int x, const int y);
   void _setAllTerritoriesOwner();
   Player _identifyTerritory(const int x, const int y, const int &visit_id);
   void _setTerritoryOwner(const int x, const int y, const Player &new_owner);

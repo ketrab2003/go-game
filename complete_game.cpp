@@ -119,7 +119,7 @@ void CompleteGame::showAlert(const char* alert_message) {
   mainBuffer.clear();
   mainBuffer.drawText(alert_message, 0, 0);
   mainBuffer.print();
-  getch();
+  UserInput::getKey();
 }
 
 int CompleteGame::getNumberFromUser(const int maxLimit) {

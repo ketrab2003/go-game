@@ -234,7 +234,6 @@ void longChainCapturing() {
 void advancedSuicidal() {
   printf("Testing Advanced suicidal...");
   GoGame game(4);
-  char result[4*4 + 1];
 
   const int moves[][2] = {{0,1},{0,2},
                           {1,0},{1,2},
@@ -419,7 +418,69 @@ void scoringCaptures() {
 }
 
 void scoringTerritory() {
-  // TODO: implement
+  printf("Testing Territory scoring...");
+
+  GoGame game = GoGame(9);
+
+  const int moves[][2] = {{0,0},{2,0},
+                          {4,0},{6,0},
+                          {5,0},{1,1},
+                          {3,1},{2,1},
+                          {4,1},{5,1},
+                          {2,2},{6,1},
+                          {3,2},{0,2},
+                          {0,3},{1,2},
+                          {1,3},{5,2},
+                          {3,3},{5,3},
+                          {3,4},{5,4},
+                          {3,5},{5,5},
+                          {3,6},{7,5},
+                          {7,6},{8,5},
+                          {8,6},{5,6},
+                          {2,7},{6,6},
+                          {3,7},{4,7},
+                          {6,7},{5,7},
+                          {7,7},{3,8},
+                          {2,8},{4,8},
+                          {6,8}};
+  game.placeStone(8, 8);
+
+  for(auto move: moves) {
+    game.placeStone(move[0], move[1]);
+    game.confirmPlacement();
+  }
+
+  char result[9*9+1];
+  const char expected[] =
+          "b.w.bbw.."
+          ".wwbbww.."
+          "wwbb.w..."
+          "bb.b.w..."
+          "...b.w..."
+          "...b.w.ww"
+          "...b.wwbb"
+          "..bbwwbb."
+          "..bww.b.b";
+  game.exportBoard(result);
+  assert(compare(result, expected) && "Figure 3");
+  
+  game.finishGame();
+
+  // game.exportBoard(result);
+  // for(int x=0; x<9; ++x) {
+  //   for(int y=0; y<9; ++y) {
+  //     const BoardSpace space = game.getSpace(y, x);
+  //     printf("%d%c ", (int)space.territory_owner, result[x*9+y]);
+  //   }
+  //   printf("\n");
+  // }
+
+  // printf("b: %d w: %d\n", game.getScoreBlack(), game.getScoreWhite());
+
+  assert(game.getScoreBlack() == 8+14+2 && "example from instruction pdf (Figure 3)");
+  assert(game.getScoreWhite() == 14 && "example from instruction pdf (Figure 3)");
+
+  puts("OK");
 }
 
 int main() {
