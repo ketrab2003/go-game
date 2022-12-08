@@ -33,6 +33,7 @@ struct BoardSpace {
   int visited_id = -1;
   Player territory_owner = none;
   bool is_dead = false;
+  bool atari = false;
 };
 
 class GameState {
@@ -92,6 +93,8 @@ class GoGame {
   Player _identifyTerritory(const int x, const int y, const int &visit_id);
   void _setTerritoryOwner(const int x, const int y, const Player &new_owner);
   void _countTerritoryPoints();
+
+  // TODO: atari logic
 
   void _enableHandicap();
 
