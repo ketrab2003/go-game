@@ -43,4 +43,4 @@ jobs:
       uses: ncipollo/release-action@v1
       with:
         artifacts: ${{env.RELEASE_FILE_PATH}}
-        token: ${{ secrets.TOKEN }}
+        token: ${{ secrets.GITHUB_TOKEN }}
