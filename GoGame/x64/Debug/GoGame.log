@@ -1,7 +1,0 @@
-﻿  complete_game.cpp
-  main.cpp
-  user_input.cpp
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\stdio.h(41,1): warning C4005: 'EOF': macro redefinition
-C:\Users\ketrab\source\repos\GoGame\GoGame\conio2.h(31): message : see previous definition of 'EOF'
-  Generating Code...
-  GoGame.vcxproj -> C:\Users\ketrab\source\repos\GoGame\x64\Debug\GoGame.exe
