@@ -24,7 +24,6 @@ public:
     T* operator[](const unsigned x);
 };
 
-#include <cstring>
 
 template<class T>
 Array2D<T>::Array2D(const unsigned width, const unsigned height) {
@@ -41,7 +40,9 @@ Array2D<T>::~Array2D() {
 template<class T>
 Array2D<T>::Array2D(const Array2D<T>& other)
     : Array2D(other.getWidth(), other.getHeight()) {
-    memcpy(_vals, other._vals, sizeof(T) * getArea());
+    for(int i=0; i<getArea(); ++i) {
+        this->_vals[i] = other._vals[i];
+    }
 }
 
 template<class T>
@@ -65,7 +66,10 @@ Array2D<T>& Array2D<T>::operator=(const Array2D<T>& other) {
 
     _width = other.getWidth();
     _height = other.getHeight();
-    memcpy(_vals, other._vals, sizeof(T) * getArea());
+
+    for(int i=0; i<getArea(); ++i) {
+        this->_vals[i] = other._vals[i];
+    }
 
     return *this;
 }
