@@ -6,53 +6,58 @@
 #include "gui_utils.h"
 #include "user_input.h"
 #include <cstdio>
-#include <cstring>
 
 void CompleteGame::setGameStatusMessage(MoveResult result) {
-    char message[GAME_STATUS_MAX_LENGTH + 1] = "";
     switch (result) {
     case done:
-        strcpy(message, "");
+        gameStatusMessage = EMPTY_TEXT;
         break;
     case occupied:
-        strcpy(message, OCCUPIED_MESSAGE);
+        gameStatusMessage = OCCUPIED_MESSAGE;
         break;
     case suicidal:
-        strcpy(message, SUICIDE_MESSAGE);
+        gameStatusMessage = SUICIDE_MESSAGE;
         break;
     case already_placed:
-        strcpy(message, ALREADY_PLACED_MESSAGE);
+        gameStatusMessage = ALREADY_PLACED_MESSAGE;
         break;
     case ko:
-        strcpy(message, KO_MESSAGE);
+        gameStatusMessage = KO_MESSAGE;
         break;
     case handicap:
-        strcpy(message, HANDICAP_MESSAGE);
+        gameStatusMessage = HANDICAP_MESSAGE;
+        break;
+    default:
+        gameStatusMessage = EMPTY_TEXT;
         break;
     }
-    strcpy(gameStatusMessage, message);
 }
 
 void CompleteGame::clearGameStatusMessage() {
-    strcpy(gameStatusMessage, "");
+    gameStatusMessage = EMPTY_TEXT;
 }
 
-int CompleteGame::getBoardviewSize() const {
-    const int buffer_limit = min(mainBuffer.getWidth() - LEGEND_WIDTH - 2, mainBuffer.getHeight() - 2);
+int CompleteGame::getBoardviewWidth() const {
+    const int buffer_limit = mainBuffer.getWidth() - LEGEND_WIDTH - BOARD_OFFSET;
+    return min(game.getBoardSize() + 2, buffer_limit);
+}
+
+int CompleteGame::getBoardviewHeight() const {
+    const int buffer_limit = mainBuffer.getHeight() - BOARD_POSITION_TOP;
     return min(game.getBoardSize() + 2, buffer_limit);
 }
 
 void CompleteGame::drawBoard() {
-    if (boardBuffer.getWidth() != getBoardviewSize()) {
-        boardBuffer = Canvas(getBoardviewSize(), getBoardviewSize());
+    if (boardBuffer.getWidth() != getBoardviewWidth() || boardBuffer.getHeight() != getBoardviewHeight()) {
+        boardBuffer = Canvas(getBoardviewWidth(), getBoardviewHeight());
     }
     boardBuffer.clear();
 
     const int offset_x = cursor.getViewboxPositionX();
     const int offset_y = cursor.getViewboxPositionY();
 
-    for (int x = 0; x < getBoardviewSize(); ++x) {
-        for (int y = 0; y < getBoardviewSize(); ++y) {
+    for (int x = 0; x < getBoardviewWidth(); ++x) {
+        for (int y = 0; y < getBoardviewHeight(); ++y) {
             BoardSpace space = game.getSpace(offset_x + x, offset_y + y);
             boardBuffer.setPixel(x, y, getBoardSign(space));
             if (game.getChosenX() >= 0 && offset_x + x == game.getChosenX() && offset_y + y == game.getChosenY()) {
@@ -101,6 +106,7 @@ void CompleteGame::drawLegend() {
 }
 
 void CompleteGame::drawAll() {
+    // re-set buffer if terminal size changed
     if (mainBuffer.getWidth() != GUIUtils::getTerminalWidth()
         || mainBuffer.getHeight() != GUIUtils::getTerminalHeight()) {
         mainBuffer = Canvas(GUIUtils::getTerminalWidth(), GUIUtils::getTerminalHeight());
@@ -111,16 +117,14 @@ void CompleteGame::drawAll() {
 
     mainBuffer.clear();
 
-    if (BOARD_OFFSET >= 0) {
-        // legend on the right
+    if (BOARD_ON_RIGHT) {
         mainBuffer.drawCanvas(legendBuffer, ALL_OFFSET, LEGEND_POSITION_TOP);
         const int board_x = legendBuffer.getWidth() + BOARD_OFFSET;
         mainBuffer.drawCanvas(boardBuffer, board_x, BOARD_POSITION_TOP);
     }
     else {
-        // legend on the left
         mainBuffer.drawCanvas(boardBuffer, ALL_OFFSET, BOARD_POSITION_TOP);
-        const int legend_x = boardBuffer.getWidth() - BOARD_OFFSET - 1;
+        const int legend_x = boardBuffer.getWidth() + BOARD_OFFSET;
         mainBuffer.drawCanvas(legendBuffer, legend_x, LEGEND_POSITION_TOP);
     }
 }
@@ -213,13 +217,13 @@ void CompleteGame::showGameResult() {
     char score_message[SCORE_MESSAGE_MAX_LENGTH + 1];
     sprintf(score_message, SCORE_MESSAGE_FORMAT, (int)game.getScoreBlack(), (int)game.getScoreWhite(), (float)game.getScoreWhiteBonus());
     mainBuffer.drawText(score_message, 0, 1);
-    char result_message[WINNING_MESSAGE_MAX_LENGTH + 1] = "";
+    const char* result_message = EMPTY_TEXT;
     switch (game.whoWon()) {
     case black:
-        strcpy(result_message, BLACK_WON_MESSAGE);
+        result_message = BLACK_WON_MESSAGE;
         break;
     case white:
-        strcpy(result_message, WHITE_WON_MESSAGE);
+        result_message = WHITE_WON_MESSAGE;
         break;
     default:
         break;
@@ -251,7 +255,7 @@ void CompleteGame::showGameResult() {
 void CompleteGame::createNewGame() {
     const int board_size = askBoardSize();
     game = GoGame(board_size);
-    cursor = Cursor(game.getBoardSize(), game.getBoardSize(), getBoardviewSize(), getBoardviewSize());
+    cursor = Cursor(game.getBoardSize(), game.getBoardSize(), getBoardviewWidth(), getBoardviewHeight());
     clearGameStatusMessage();
 }
 
@@ -277,7 +281,7 @@ void CompleteGame::loadGame() {
         return;
     }
     game.load(loadfile);
-    cursor = Cursor(game.getBoardSize(), game.getBoardSize(), getBoardviewSize(), getBoardviewSize());
+    cursor = Cursor(game.getBoardSize(), game.getBoardSize(), getBoardviewWidth(), getBoardviewHeight());
     fclose(loadfile);
     showAlert(LOAD_SUCCESS);
 }
@@ -343,7 +347,7 @@ CompleteGame::CompleteGame()
     : game(0),
     cursor(0, 0, 0, 0),
     mainBuffer(GUIUtils::getTerminalWidth(), GUIUtils::getTerminalHeight()),
-    boardBuffer(getBoardviewSize(), getBoardviewSize()),
+    boardBuffer(getBoardviewWidth(), getBoardviewHeight()),
     legendBuffer(LEGEND_WIDTH, LEGEND_HEIGHT) {
     gameIsRunning = true;
 }

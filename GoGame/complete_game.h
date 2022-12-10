@@ -10,19 +10,20 @@ class CompleteGame {
 	Canvas mainBuffer;
 	Canvas boardBuffer;
 	Canvas legendBuffer;
-	char gameStatusMessage[20];
+	const char* gameStatusMessage;
 	bool gameIsRunning;
 
 	void setGameStatusMessage(MoveResult result);
 	void clearGameStatusMessage();
 
 	// drawing logic
-	int getBoardviewSize() const;	// size of piece of board that can be printed on screen
+	int getBoardviewWidth() const;	// width of piece of board that can be printed on screen
+	int getBoardviewHeight() const;	// height of piece of board that can be printed on screen
 	void drawBoard();
 	static Pixel getBoardSign(const BoardSpace& space);	// helper function returning Pixel representation of provided space on board
 	void drawLegend();
 	void drawAll();		// calls all other draw functions and draws all pieces on mainBuffer
-	void printGame();   // print game onto user's screen
+	void printGame();
 
 	// user dialog logic
 	void showAlert(const char* alert_message);	// show message that user can dismiss by clicking any button
@@ -35,9 +36,9 @@ class CompleteGame {
 	void saveGame();
 	void loadGame();
 
-	void gameInit();
+	void gameInit();	// should be run exactly once at the beggining of the program
 	void gameLoop();
-	void gameExit();
+	void gameExit();	// should be run exactly once at the end of the program
 
 public:
 	CompleteGame();
